@@ -3,7 +3,7 @@ import { ConfigModule } from '@nestjs/config';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { MembersModule } from './members/members.module';
 import { FingerprintsModule } from './fingerprints/fingerprints.module';
-
+import { AccessModule } from './access/access.module';
 @Module({
   imports: [
     ConfigModule.forRoot({
@@ -24,6 +24,8 @@ import { FingerprintsModule } from './fingerprints/fingerprints.module';
     MembersModule,
 
     FingerprintsModule,
+
+    AccessModule,
   ],
 })
 export class AppModule {}
