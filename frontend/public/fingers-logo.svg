@@ -1,0 +1,11 @@
+<svg width="128" height="128" viewBox="0 0 128 128" fill="none" xmlns="http://www.w3.org/2000/svg" role="img" aria-labelledby="title desc">
+  <title id="title">FingerS logo</title>
+  <desc id="desc">Monograma circular con una F formada por lineas inspiradas en una huella digital.</desc>
+  <rect width="128" height="128" rx="36" fill="#050505"/>
+  <path d="M38 39C45.2 29.5 55 25 67.4 25C82.2 25 94 34.8 96.8 48.4" stroke="white" stroke-width="7" stroke-linecap="round"/>
+  <path d="M33 55.8C40.2 42.9 51.4 36.3 66.8 36.3C80.9 36.3 89.6 45.4 89.6 58.8C89.6 72 81.4 82.2 70.3 82.2H53.6" stroke="white" stroke-width="7" stroke-linecap="round"/>
+  <path d="M35.2 73.2C40.2 58.8 51.8 49 66.5 49C73.7 49 78.3 53.3 78.3 59.5C78.3 66.3 73.6 70.9 66.2 70.9H52.8" stroke="white" stroke-width="7" stroke-linecap="round"/>
+  <path d="M50.7 94.4V56.8H76.2" stroke="white" stroke-width="8" stroke-linecap="round" stroke-linejoin="round"/>
+  <path d="M50.7 73.8H69.8" stroke="white" stroke-width="8" stroke-linecap="round"/>
+  <circle cx="94" cy="93" r="8" fill="white"/>
+</svg>

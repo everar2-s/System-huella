@@ -1,0 +1,66 @@
+<div
+  class="app-shell"
+  [class.auth-only]="!authService.admin()"
+  [class.sidebar-collapsed]="sidebarCollapsed"
+>
+  <aside class="sidebar" [class.collapsed]="sidebarCollapsed" *ngIf="authService.admin() as admin">
+    <div class="brand-row">
+      <a class="brand" routerLink="/dashboard" aria-label="FingerS dashboard">
+        <img class="brand-logo" src="/fingers-logo.svg" alt="FingerS" />
+        <span class="brand-copy">
+          <strong>FingerS</strong>
+          <small>Control biometrico</small>
+        </span>
+      </a>
+
+      <button
+        class="sidebar-toggle"
+        type="button"
+        [attr.aria-label]="sidebarCollapsed ? 'Desplegar menu' : 'Contraer menu'"
+        [attr.aria-expanded]="!sidebarCollapsed"
+        (click)="toggleSidebar()"
+      >
+        <span></span>
+        <span></span>
+      </button>
+    </div>
+
+    <nav class="nav">
+      <a routerLink="/dashboard" routerLinkActive="active" title="Dashboard">
+        <span class="nav-icon dashboard-icon" aria-hidden="true"></span>
+        <span class="nav-label">Dashboard</span>
+      </a>
+      <a routerLink="/members" routerLinkActive="active" title="Socios">
+        <span class="nav-icon members-icon" aria-hidden="true"></span>
+        <span class="nav-label">Socios</span>
+      </a>
+      <a routerLink="/attendance" routerLinkActive="active" title="Asistencias">
+        <span class="nav-icon attendance-icon" aria-hidden="true"></span>
+        <span class="nav-label">Asistencias</span>
+      </a>
+      <a routerLink="/devices" routerLinkActive="active" title="Dispositivos">
+        <span class="nav-icon devices-icon" aria-hidden="true"></span>
+        <span class="nav-label">Dispositivos</span>
+      </a>
+      <a routerLink="/access" routerLinkActive="active" title="Accesos">
+        <span class="nav-icon access-icon" aria-hidden="true"></span>
+        <span class="nav-label">Simulador Accesos</span>
+      </a>
+    </nav>
+
+    <div class="session">
+      <div class="session-copy">
+        <span>{{ admin.fullName }}</span>
+        <small>{{ admin.role }}</small>
+      </div>
+      <button class="logout-button" type="button" (click)="logout()" title="Cerrar sesion">
+        <span class="logout-icon" aria-hidden="true"></span>
+        <span class="logout-label">Cerrar sesion</span>
+      </button>
+    </div>
+  </aside>
+
+  <main class="content">
+    <router-outlet />
+  </main>
+</div>
