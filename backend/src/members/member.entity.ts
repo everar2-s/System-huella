@@ -2,8 +2,11 @@ import {
   Column,
   CreateDateColumn,
   Entity,
+  OneToMany,
   PrimaryGeneratedColumn,
 } from 'typeorm';
+
+import { Fingerprint } from '../fingerprints/fingerprint.entity';
 
 @Entity('members')
 export class Member {
@@ -30,4 +33,7 @@ export class Member {
 
   @CreateDateColumn()
   createdAt: Date;
+
+  @OneToMany(() => Fingerprint, (fingerprint) => fingerprint.member)
+  fingerprints: Fingerprint[];
 }
