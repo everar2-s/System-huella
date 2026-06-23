@@ -15,14 +15,15 @@ export class AccessController {
   ) {
     return this.accessService.checkIn(body);
   }
+
   @Post('checkout')
-checkOut(
-  @Body()
-  body: {
-    fingerprintId: number;
-    deviceId?: string;
-  },
-) {
-  return this.accessService.checkOut(body);
-}
+  checkOut(
+    @Body()
+    body: {
+      fingerprintId: number;
+      deviceId?: string;
+    },
+  ) {
+    return this.accessService.checkOut(body);
+  }
 }
