@@ -5,6 +5,8 @@ import { MembersModule } from './members/members.module';
 import { FingerprintsModule } from './fingerprints/fingerprints.module';
 import { AccessModule } from './access/access.module';
 import { AttendanceModule } from './attendance/attendance.module';
+import { MembershipsModule } from './memberships/memberships.module';
+
 @Module({
   imports: [
     ConfigModule.forRoot({
@@ -29,6 +31,8 @@ import { AttendanceModule } from './attendance/attendance.module';
     AccessModule,
 
     AttendanceModule,
+
+    MembershipsModule,
   ],
 })
 export class AppModule {}
