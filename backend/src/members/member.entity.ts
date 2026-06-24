@@ -16,10 +16,10 @@ export class Member {
   @Column()
   fullName: string;
 
-  @Column({ nullable: true })
+  @Column({ nullable: true, unique: true })
   phone: string;
 
-  @Column({ nullable: true })
+ @Column({ nullable: true, unique: true })
   email: string;
 
   @Column({ default: 'pendiente_huella' })

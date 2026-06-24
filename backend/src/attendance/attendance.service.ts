@@ -11,7 +11,17 @@ export class AttendanceService {
     @InjectRepository(AttendanceLog)
     private readonly attendanceRepository: Repository<AttendanceLog>,
   ) {}
-
+ findLastSuccessfulByMember(memberId: number) {
+  return this.attendanceRepository.findOne({
+    where: {
+      memberId,
+      accessGranted: true,
+    },
+    order: {
+      createdAt: 'DESC',
+    },
+  });
+}
   async create(data: {
     member?: Member;
     memberId?: number;

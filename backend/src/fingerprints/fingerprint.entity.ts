@@ -23,7 +23,7 @@ export class Fingerprint {
   @Column({ default: true })
   active: boolean;
 
-  @Column()
+  @Column({ unique: true })
   memberId: number;
 
   @ManyToOne(() => Member, (member) => member.fingerprints, {

@@ -32,26 +32,45 @@ export class FingerprintsService {
       throw new NotFoundException('El miembro no existe');
     }
 
-    const existingFingerprint = await this.fingerprintRepository.findOne({
-      where: { fingerprintId: data.fingerprintId },
-    });
+    // Validar que el socio no tenga ya una huella registrada
+    const memberAlreadyHasFingerprint =
+      await this.fingerprintRepository.findOne({
+        where: { memberId: data.memberId },
+      });
+
+    if (memberAlreadyHasFingerprint) {
+      throw new ConflictException(
+        'Este socio ya tiene una huella registrada',
+      );
+    }
+
+    // Validar que ese fingerprintId no esté ocupado
+    const existingFingerprint =
+      await this.fingerprintRepository.findOne({
+        where: { fingerprintId: data.fingerprintId },
+      });
 
     if (existingFingerprint) {
       throw new ConflictException(
         'Ese fingerprintId ya está registrado',
       );
     }
-member.status = 'Huella registrada';
-await this.memberRepository.save(member);
 
-const fingerprint = this.fingerprintRepository.create({
-  memberId: data.memberId,
-  fingerprintId: data.fingerprintId,
-  fingerName: data.fingerName,
-  member,
-});
+    const fingerprint = this.fingerprintRepository.create({
+      memberId: data.memberId,
+      fingerprintId: data.fingerprintId,
+      fingerName: data.fingerName,
+      member,
+    });
 
-return this.fingerprintRepository.save(fingerprint);
+    const savedFingerprint =
+      await this.fingerprintRepository.save(fingerprint);
+
+    // Cambiamos el estado del socio
+    member.status = 'activo';
+    await this.memberRepository.save(member);
+
+    return savedFingerprint;
   }
 
   findAll() {
