@@ -12,7 +12,7 @@ import { Member } from '../members/member.entity';
 @Entity('attendance_logs')
 export class AttendanceLog {
   @PrimaryGeneratedColumn()
-  id: number;
+  id!: number;
 
   @Column({ nullable: true })
   memberId?: number;
@@ -24,18 +24,18 @@ export class AttendanceLog {
   deviceId?: string;
 
   @Column()
-  type: string;
+  type!: string;
 
   @Column({ default: false })
-  accessGranted: boolean;
+  accessGranted!: boolean;
 
   @Column()
-  message: string;
+  message!: string;
 
   @ManyToOne(() => Member, { nullable: true, onDelete: 'SET NULL' })
   @JoinColumn({ name: 'memberId' })
   member?: Member;
 
   @CreateDateColumn()
-  createdAt: Date;
+  createdAt!: Date;
 }

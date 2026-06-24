@@ -1,13 +1,9 @@
-import {
-  Body,
-  Controller,
-  Get,
-  Param,
-  Patch,
-  Post,
-} from '@nestjs/common';
+import {Body,Controller,Get,Param,Patch,Post,} from '@nestjs/common';
 import { MembershipsService } from './memberships.service';
+import { UseGuards } from '@nestjs/common';
+import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 
+@UseGuards(JwtAuthGuard)
 @Controller('memberships')
 export class MembershipsController {
   constructor(

@@ -12,30 +12,30 @@ import { Member } from '../members/member.entity';
 @Entity('memberships')
 export class Membership {
   @PrimaryGeneratedColumn()
-  id: number;
+  id!: number;
 
   @Column()
-  memberId: number;
+  memberId!: number;
 
   @Column()
-  type: string; // diaria, semanal, mensual, anual
+  type!: string; // diaria, semanal, mensual, anual
 
   @Column({ type: 'date' })
-  startDate: string;
+  startDate!: string;
 
   @Column({ type: 'date' })
-  endDate: string;
+  endDate!: string;
 
   @Column({ default: 'activa' })
-  status: string; // activa, vencida, cancelada
+  status!: string; // activa, vencida, cancelada
 
   @Column({ type: 'decimal', precision: 10, scale: 2, default: 0 })
-  price: number;
+  price!: number;
 
   @ManyToOne(() => Member, { onDelete: 'CASCADE' })
   @JoinColumn({ name: 'memberId' })
-  member: Member;
+  member!: Member;
 
   @CreateDateColumn()
-  createdAt: Date;
+  createdAt!: Date;
 }

@@ -1,14 +1,9 @@
-import {
-  Body,
-  Controller,
-  Delete,
-  Get,
-  Param,
-  Post,
-} from '@nestjs/common';
-
+import {Body,Controller,Delete, Get, Param,Post,} from '@nestjs/common';
+import { UseGuards } from '@nestjs/common';
+import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 import { FingerprintsService } from './fingerprints.service';
 
+@UseGuards(JwtAuthGuard)
 @Controller('fingerprints')
 export class FingerprintsController {
   constructor(

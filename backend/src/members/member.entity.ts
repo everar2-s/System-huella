@@ -11,29 +11,29 @@ import { Fingerprint } from '../fingerprints/fingerprint.entity';
 @Entity('members')
 export class Member {
   @PrimaryGeneratedColumn()
-  id: number;
+  id!: number;
 
   @Column()
-  fullName: string;
+  fullName!: string;
 
   @Column({ nullable: true, unique: true })
-  phone: string;
+  phone!: string;
 
  @Column({ nullable: true, unique: true })
-  email: string;
+  email!: string;
 
   @Column({ default: 'pendiente_huella' })
-  status: string;
+  status!: string;
 
   @Column({ type: 'date' })
-  membershipStart: string;
+  membershipStart!: string;
 
   @Column({ type: 'date' })
-  membershipEnd: string;
+  membershipEnd!: string;
 
   @CreateDateColumn()
-  createdAt: Date;
+  createdAt!: Date;
 
   @OneToMany(() => Fingerprint, (fingerprint) => fingerprint.member)
-  fingerprints: Fingerprint[];
+  fingerprints!: Fingerprint[];
 }

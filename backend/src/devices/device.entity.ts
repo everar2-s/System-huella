@@ -8,23 +8,23 @@ import {
 @Entity('devices')
 export class Device {
   @PrimaryGeneratedColumn()
-  id: number;
+  id!: number;
 
   @Column({ unique: true })
-  deviceId: string;
+  deviceId!: string;
 
   @Column()
-  name: string;
+  name!: string;
 
   @Column({ nullable: true })
-  location: string;
+  location! : string;
 
   @Column({ default: 'activo' })
-  status: string;
+  status!: string;
 
   @Column()
-  apiKey: string;
+  apiKey!: string;
 
   @CreateDateColumn()
-  createdAt: Date;
+  createdAt!: Date;
 }

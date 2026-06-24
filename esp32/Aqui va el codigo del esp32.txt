@@ -1,0 +1,310 @@
+#include <WiFi.h>
+#include <HTTPClient.h>
+#include <ArduinoJson.h>
+
+// ===============================
+// CONFIGURACIÓN WIFI
+// ===============================
+const char* WIFI_SSID     = "INFINITUM54CF_2.4";
+const char* WIFI_PASSWORD = "u7XG9kDCQS";
+
+// IMPORTANTE:
+// No uses localhost.
+// Usa la IP de tu PC donde corre NestJS.
+const char* API_URL = "http://192.168.1.67:3000";
+
+// ===============================
+// DATOS DEL DISPOSITIVO
+// ===============================
+const char* DEVICE_ID = "ESP32-ENTRADA-01";
+const char* API_KEY   = "gym_esp32_1234";
+
+// LED integrado del ESP32
+const int LED_PIN = 2;
+
+void setup() {
+  Serial.begin(115200);
+  delay(1000);
+
+  pinMode(LED_PIN, OUTPUT);
+  digitalWrite(LED_PIN, LOW);
+
+  Serial.println();
+  Serial.println("======================================");
+  Serial.println("ESP32 SIMULADOR DE HUELLAS");
+  Serial.println("======================================");
+
+  conectarWiFi();
+
+  Serial.println();
+  Serial.println("Comandos disponibles:");
+  Serial.println("R1    -> Registrar huella simulada para socio 1");
+  Serial.println("R2    -> Registrar huella simulada para socio 2");
+  Serial.println("I1    -> Entrada con fingerprintId 1");
+  Serial.println("O1    -> Salida con fingerprintId 1");
+  Serial.println("I999  -> Entrada con huella no registrada");
+  Serial.println();
+}
+
+void loop() {
+  if (Serial.available()) {
+    String comando = Serial.readStringUntil('\n');
+    comando.trim();
+
+    if (comando.length() < 2) {
+      Serial.println("Comando inválido. Usa R1, I1, O1, I999");
+      return;
+    }
+
+    char accion = comando.charAt(0);
+    int id = comando.substring(1).toInt();
+
+    if (id <= 0) {
+      Serial.println("ID inválido.");
+      return;
+    }
+
+    if (accion == 'R' || accion == 'r') {
+      registrarHuellaSimulada(id);
+    } 
+    else if (accion == 'I' || accion == 'i') {
+      enviarAcceso("/access/checkin", id);
+    } 
+    else if (accion == 'O' || accion == 'o') {
+      enviarAcceso("/access/checkout", id);
+    } 
+    else {
+      Serial.println("Comando no reconocido.");
+      Serial.println("Usa R para registrar, I para entrada, O para salida.");
+    }
+  }
+}
+
+// ===============================
+// CONECTAR WIFI
+// ===============================
+void conectarWiFi() {
+  Serial.print("Conectando a WiFi: ");
+  Serial.println(WIFI_SSID);
+
+  WiFi.begin(WIFI_SSID, WIFI_PASSWORD);
+
+  int intentos = 0;
+
+  while (WiFi.status() != WL_CONNECTED && intentos < 30) {
+    delay(500);
+    Serial.print(".");
+    intentos++;
+  }
+
+  Serial.println();
+
+  if (WiFi.status() == WL_CONNECTED) {
+    Serial.println("WiFi conectado correctamente.");
+    Serial.print("IP del ESP32: ");
+    Serial.println(WiFi.localIP());
+  } else {
+    Serial.println("No se pudo conectar al WiFi.");
+  }
+}
+
+// ===============================
+// REGISTRAR HUELLA SIMULADA
+// ===============================
+// Regla usada:
+// memberId = fingerprintId
+// Ejemplo: R1 registra memberId 1 con fingerprintId 1
+void registrarHuellaSimulada(int memberId) {
+  if (!verificarWiFi()) {
+    return;
+  }
+
+  int fingerprintId = memberId;
+
+  HTTPClient http;
+
+  String endpoint = String(API_URL) + "/fingerprints";
+
+  http.begin(endpoint);
+  http.addHeader("Content-Type", "application/json");
+
+  StaticJsonDocument<256> json;
+  json["memberId"] = memberId;
+  json["fingerprintId"] = fingerprintId;
+  json["fingerName"] = "Dedo simulado";
+
+  String body;
+  serializeJson(json, body);
+
+  Serial.println();
+  Serial.println("Registrando huella simulada...");
+  Serial.print("Endpoint: ");
+  Serial.println(endpoint);
+  Serial.print("Body: ");
+  Serial.println(body);
+
+  int httpCode = http.POST(body);
+
+  if (httpCode <= 0) {
+    Serial.print("Error HTTP: ");
+    Serial.println(httpCode);
+    Serial.print("Detalle: ");
+    Serial.println(http.errorToString(httpCode));
+    http.end();
+    accesoDenegado();
+    return;
+  }
+
+  String response = http.getString();
+
+  Serial.print("Código HTTP: ");
+  Serial.println(httpCode);
+  Serial.print("Respuesta: ");
+  Serial.println(response);
+
+  http.end();
+
+  if (httpCode == 201 || httpCode == 200) {
+    Serial.println("Huella simulada registrada correctamente.");
+    accesoPermitido();
+  } else {
+    Serial.println("No se pudo registrar la huella simulada.");
+    accesoDenegado();
+  }
+}
+
+// ===============================
+// ENVIAR ENTRADA O SALIDA
+// ===============================
+void enviarAcceso(String ruta, int fingerprintId) {
+  if (!verificarWiFi()) {
+    return;
+  }
+
+  HTTPClient http;
+
+  String endpoint = String(API_URL) + ruta;
+
+  http.begin(endpoint);
+  http.addHeader("Content-Type", "application/json");
+  http.addHeader("x-api-key", API_KEY);
+
+  StaticJsonDocument<256> json;
+  json["fingerprintId"] = fingerprintId;
+  json["deviceId"] = DEVICE_ID;
+
+  String body;
+  serializeJson(json, body);
+
+  Serial.println();
+  Serial.println("Enviando petición de acceso...");
+  Serial.print("Endpoint: ");
+  Serial.println(endpoint);
+  Serial.print("Body: ");
+  Serial.println(body);
+
+  int httpCode = http.POST(body);
+
+  if (httpCode <= 0) {
+    Serial.print("Error HTTP: ");
+    Serial.println(httpCode);
+    Serial.print("Detalle: ");
+    Serial.println(http.errorToString(httpCode));
+    http.end();
+    accesoDenegado();
+    return;
+  }
+
+  String response = http.getString();
+
+  Serial.print("Código HTTP: ");
+  Serial.println(httpCode);
+  Serial.print("Respuesta: ");
+  Serial.println(response);
+
+  http.end();
+
+  procesarRespuestaAcceso(response);
+}
+
+// ===============================
+// PROCESAR RESPUESTA DEL BACKEND
+// ===============================
+void procesarRespuestaAcceso(String response) {
+  StaticJsonDocument<768> json;
+  DeserializationError error = deserializeJson(json, response);
+
+  if (error) {
+    Serial.println("No se pudo leer la respuesta JSON.");
+    accesoDenegado();
+    return;
+  }
+
+  bool access = json["access"] | false;
+  const char* message = json["message"] | "Sin mensaje";
+  const char* type = json["type"] | "sin tipo";
+
+  Serial.println();
+  Serial.println("Resultado del backend:");
+  Serial.print("Acceso: ");
+  Serial.println(access ? "PERMITIDO" : "DENEGADO");
+
+  Serial.print("Mensaje: ");
+  Serial.println(message);
+
+  Serial.print("Tipo: ");
+  Serial.println(type);
+
+  if (json["member"]["fullName"]) {
+    const char* fullName = json["member"]["fullName"];
+    Serial.print("Socio: ");
+    Serial.println(fullName);
+  }
+
+  if (access) {
+    accesoPermitido();
+  } else {
+    accesoDenegado();
+  }
+}
+
+// ===============================
+// VERIFICAR WIFI
+// ===============================
+bool verificarWiFi() {
+  if (WiFi.status() == WL_CONNECTED) {
+    return true;
+  }
+
+  Serial.println("WiFi desconectado. Reconectando...");
+  conectarWiFi();
+
+  if (WiFi.status() == WL_CONNECTED) {
+    return true;
+  }
+
+  Serial.println("No hay conexión WiFi.");
+  return false;
+}
+
+// ===============================
+// INDICADORES
+// ===============================
+void accesoPermitido() {
+  Serial.println("LED: acceso correcto");
+
+  digitalWrite(LED_PIN, HIGH);
+  delay(1000);
+  digitalWrite(LED_PIN, LOW);
+}
+
+void accesoDenegado() {
+  Serial.println("LED: acceso denegado");
+
+  for (int i = 0; i < 3; i++) {
+    digitalWrite(LED_PIN, HIGH);
+    delay(200);
+    digitalWrite(LED_PIN, LOW);
+    delay(200);
+  }
+}

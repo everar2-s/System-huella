@@ -12,26 +12,26 @@ import { Member } from '../members/member.entity';
 @Entity('fingerprints')
 export class Fingerprint {
   @PrimaryGeneratedColumn()
-  id: number;
+  id!: number;
 
   @Column({ unique: true })
-  fingerprintId: number;
+  fingerprintId!  : number;
 
   @Column()
-  fingerName: string;
+  fingerName!: string;
 
   @Column({ default: true })
-  active: boolean;
+  active!: boolean;
 
   @Column({ unique: true })
-  memberId: number;
+  memberId!: number;
 
   @ManyToOne(() => Member, (member) => member.fingerprints, {
     onDelete: 'CASCADE',
   })
   @JoinColumn({ name: 'memberId' })
-  member: Member;
+  member!: Member;
 
   @CreateDateColumn()
-  createdAt: Date;
+  createdAt!: Date;
 }
