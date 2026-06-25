@@ -5,9 +5,14 @@ import { MembershipsController } from './memberships.controller';
 import { MembershipsService } from './memberships.service';
 import { Membership } from './membership.entity';
 import { Member } from '../members/member.entity';
+import { Fingerprint } from '../fingerprints/fingerprint.entity';
+import { AuthModule } from '../auth/auth.module';
 
 @Module({
-  imports: [TypeOrmModule.forFeature([Membership, Member])],
+  imports: [
+    TypeOrmModule.forFeature([Membership, Member, Fingerprint]),
+    AuthModule,
+  ],
   controllers: [MembershipsController],
   providers: [MembershipsService],
   exports: [MembershipsService],

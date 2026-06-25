@@ -97,29 +97,60 @@ export class FingerprintsService {
   }
 
   async verify(fingerprintId: number) {
-    const fingerprint = await this.fingerprintRepository.findOne({
-      where: {
-        fingerprintId,
-        active: true,
-      },
-      relations: {
-        member: true,
-      },
-    });
+  const fingerprint = await this.fingerprintRepository.findOne({
+    where: {
+      fingerprintId,
+    },
+    relations: {
+      member: true,
+    },
+  });
 
-    if (!fingerprint) {
-      return {
-        access: false,
-        message: 'Huella no registrada',
-      };
-    }
-
+  if (!fingerprint) {
     return {
-      access: true,
-      message: 'Huella reconocida',
-      member: fingerprint.member,
+      access: false,
+      message: 'Huella no registrada',
     };
   }
+
+  if (!fingerprint.active) {
+    return {
+      access: false,
+      message: 'Huella inactiva',
+    };
+  }
+
+  const member = fingerprint.member;
+
+  if (!member) {
+    return {
+      access: false,
+      message: 'La huella no está vinculada a ningún socio',
+    };
+  }
+
+  const today = new Date().toISOString().split('T')[0];
+
+  if (member.membershipEnd < today) {
+    member.status = 'vencido';
+    await this.memberRepository.save(member);
+
+    fingerprint.active = false;
+    await this.fingerprintRepository.save(fingerprint);
+
+    return {
+      access: false,
+      message: 'Membresía vencida. Huella desactivada',
+      member,
+    };
+  }
+
+  return {
+    access: true,
+    message: 'Huella reconocida',
+    member,
+  };
+}
 
   async remove(id: number) {
     const fingerprint = await this.findOne(id);

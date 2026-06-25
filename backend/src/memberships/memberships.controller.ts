@@ -33,6 +33,10 @@ export class MembershipsController {
   findByMember(@Param('memberId') memberId: string) {
     return this.membershipsService.findByMember(Number(memberId));
   }
+  @Patch('expire/check')
+  expireExpiredMemberships() {
+    return this.membershipsService.expireExpiredMemberships();
+  }
 
   @Patch(':id/cancel')
   cancel(@Param('id') id: string) {
