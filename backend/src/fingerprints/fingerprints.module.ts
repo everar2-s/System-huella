@@ -5,10 +5,15 @@ import { FingerprintsController } from './fingerprints.controller';
 import { FingerprintsService } from './fingerprints.service';
 import { Fingerprint } from './fingerprint.entity';
 import { Member } from '../members/member.entity';
+import { AuthModule } from '../auth/auth.module';
 
 @Module({
-  imports: [TypeOrmModule.forFeature([Fingerprint, Member])],
+  imports: [
+    TypeOrmModule.forFeature([Fingerprint, Member]),
+    AuthModule,
+  ],
   controllers: [FingerprintsController],
   providers: [FingerprintsService],
+  exports: [FingerprintsService],
 })
 export class FingerprintsModule {}
