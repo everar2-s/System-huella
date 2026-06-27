@@ -1,7 +1,14 @@
-import { Body, Controller, Get, Param, Post } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  Get,
+  Param,
+  Post,
+  UseGuards,
+} from '@nestjs/common';
+
 import { MembersService } from './members.service';
-import { Member } from './member.entity';
-import { UseGuards } from '@nestjs/common';
+import { CreateMemberDto } from './dto/create-member.dto';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 
 @UseGuards(JwtAuthGuard)
@@ -10,7 +17,7 @@ export class MembersController {
   constructor(private readonly membersService: MembersService) {}
 
   @Post()
-  create(@Body() body: Partial<Member>) {
+  create(@Body() body: CreateMemberDto) {
     return this.membersService.create(body);
   }
 

@@ -12,6 +12,10 @@ import {
 import { FingerprintsService } from './fingerprints.service';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 
+import { CreateFingerprintDto } from './dto/create-fingerprint.dto';
+import { EnrollFingerprintDto } from './dto/enroll-fingerprint.dto';
+import { VerifyFingerprintDto } from './dto/verify-fingerprint.dto';
+
 @Controller('fingerprints')
 export class FingerprintsController {
   constructor(
@@ -21,13 +25,7 @@ export class FingerprintsController {
   @Post('enroll')
   enrollFromDevice(
     @Headers('x-api-key') apiKey: string,
-    @Body()
-    body: {
-      memberId: number;
-      fingerprintId: number;
-      fingerName: string;
-      deviceId: string;
-    },
+    @Body() body: EnrollFingerprintDto,
   ) {
     return this.fingerprintsService.enrollFromDevice({
       ...body,
@@ -37,15 +35,13 @@ export class FingerprintsController {
 
   @UseGuards(JwtAuthGuard)
   @Post()
-  create(
-    @Body()
-    body: {
-      memberId: number;
-      fingerprintId: number;
-      fingerName: string;
-    },
-  ) {
+  create(@Body() body: CreateFingerprintDto) {
     return this.fingerprintsService.create(body);
+  }
+
+  @Post('verify')
+  verify(@Body() body: VerifyFingerprintDto) {
+    return this.fingerprintsService.verify(body.fingerprintId);
   }
 
   @UseGuards(JwtAuthGuard)
@@ -58,16 +54,6 @@ export class FingerprintsController {
   @Get(':id')
   findOne(@Param('id') id: string) {
     return this.fingerprintsService.findOne(Number(id));
-  }
-
-  @Post('verify')
-  verify(
-    @Body()
-    body: {
-      fingerprintId: number;
-    },
-  ) {
-    return this.fingerprintsService.verify(body.fingerprintId);
   }
 
   @UseGuards(JwtAuthGuard)
