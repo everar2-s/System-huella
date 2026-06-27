@@ -1,0 +1,9 @@
+.actions {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+}
+
+.actions select {
+  width: 180px;
+}

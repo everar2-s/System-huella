@@ -13,7 +13,7 @@ export class Member {
   @PrimaryGeneratedColumn()
   id!: number;
 
-  @Column()
+  @Column({ nullable: false })
   fullName!: string;
 
   @Column({ nullable: true, unique: true })

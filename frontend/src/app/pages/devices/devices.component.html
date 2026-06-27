@@ -1,0 +1,80 @@
+<section class="page">
+  <div class="page-header">
+    <div>
+      <h2>Dispositivos</h2>
+      <p>Registra ESP32 autorizados para entrada y salida.</p>
+    </div>
+
+    <button class="btn btn-secondary" type="button" (click)="loadDevices()">Actualizar</button>
+  </div>
+
+  <div *ngIf="error" class="alert error">{{ error }}</div>
+  <div *ngIf="success" class="alert success">{{ success }}</div>
+
+  <article class="card">
+    <form class="form-grid" (ngSubmit)="createDevice()">
+      <div class="field">
+        <label>Device ID</label>
+        <input name="deviceId" [(ngModel)]="form.deviceId" required />
+      </div>
+
+      <div class="field">
+        <label>Nombre</label>
+        <input name="name" [(ngModel)]="form.name" required />
+      </div>
+
+      <div class="field">
+        <label>Ubicación</label>
+        <input name="location" [(ngModel)]="form.location" />
+      </div>
+
+      <div class="field">
+        <label>API key</label>
+        <input name="apiKey" [(ngModel)]="form.apiKey" required />
+      </div>
+
+      <button class="btn btn-primary" type="submit" [disabled]="saving">
+        {{ saving ? 'Guardando...' : 'Registrar dispositivo' }}
+      </button>
+    </form>
+  </article>
+
+  <article class="card">
+    <div class="table-wrap" *ngIf="devices.length; else emptyDevices">
+      <table>
+        <thead>
+          <tr>
+            <th>ID</th>
+            <th>Device ID</th>
+            <th>Nombre</th>
+            <th>Ubicación</th>
+            <th>Estado</th>
+            <th>API key</th>
+            <th>Acción</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let device of devices">
+            <td>{{ device.id }}</td>
+            <td>{{ device.deviceId }}</td>
+            <td>{{ device.name }}</td>
+            <td>{{ device.location || 'Sin ubicación' }}</td>
+            <td>
+              <span class="badge" [ngClass]="device.status === 'activo' ? 'success' : 'danger'">
+                {{ device.status }}
+              </span>
+            </td>
+            <td>{{ device.apiKey }}</td>
+            <td>
+              <button class="btn btn-danger" type="button" (click)="deactivateDevice(device.id)">Desactivar</button>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <ng-template #emptyDevices>
+      <div class="empty">No hay dispositivos registrados.</div>
+    </ng-template>
+  </article>
+</section>

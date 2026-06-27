@@ -1,0 +1,68 @@
+<section class="page">
+  <div class="page-header">
+    <div>
+      <h2>Socios</h2>
+      <p>Registra y consulta los miembros del gimnasio.</p>
+    </div>
+
+    <button class="btn btn-secondary" type="button" (click)="loadMembers()">Actualizar</button>
+  </div>
+
+  <div *ngIf="error" class="alert error">{{ error }}</div>
+  <div *ngIf="success" class="alert success">{{ success }}</div>
+
+  <article class="card">
+    <form class="form-grid" (ngSubmit)="createMember()">
+      <div class="field">
+        <label>Nombre completo</label>
+        <input name="fullName" [(ngModel)]="form.fullName" required />
+      </div>
+
+      <div class="field">
+        <label>Teléfono</label>
+        <input name="phone" [(ngModel)]="form.phone" />
+      </div>
+
+      <div class="field">
+        <label>Email</label>
+        <input type="email" name="email" [(ngModel)]="form.email" />
+      </div>
+
+
+      <button class="btn btn-primary" type="submit" [disabled]="saving">
+        {{ saving ? 'Guardando...' : 'Registrar socio' }}
+      </button>
+    </form>
+  </article>
+
+  <article class="card">
+    <div class="table-wrap" *ngIf="members.length; else emptyMembers">
+      <table>
+        <thead>
+          <tr>
+            <th>ID</th>
+            <th>Socio</th>
+            <th>Teléfono</th>
+            <th>Email</th>
+            <th>Huella</th>
+          
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let member of members">
+            <td>{{ member.id }}</td>
+            <td>{{ member.fullName }}</td>
+            <td>{{ member.phone || 'Sin teléfono' }}</td>
+            <td>{{ member.email || 'Sin email' }}</td>
+            <td><span class="badge" [ngClass]="statusClass(member.status)">{{ member.status }}</span></td>
+        
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <ng-template #emptyMembers>
+      <div class="empty">No hay socios registrados.</div>
+    </ng-template>
+  </article>
+</section>

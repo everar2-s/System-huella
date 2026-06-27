@@ -1,0 +1,51 @@
+<section class="page">
+  <div class="page-header">
+    <div>
+      <h2>Dashboard</h2>
+      <p>Resumen general del sistema de acceso del gimnasio.</p>
+    </div>
+
+    <button class="btn btn-secondary" type="button" (click)="loadDashboard()">Actualizar</button>
+  </div>
+
+  <div *ngIf="error" class="alert error">{{ error }}</div>
+
+  <section class="stats-grid">
+    <article class="stat-card" *ngFor="let stat of stats">
+      <p>{{ stat.label }}</p>
+      <h3>{{ stat.value }}</h3>
+    </article>
+  </section>
+
+  <section class="dashboard-grid">
+    
+
+    <article class="card">
+      <h3>Últimos movimientos</h3>
+      <div class="table-wrap" *ngIf="recentAttendance.length; else emptyAttendance">
+        <table>
+          <thead>
+            <tr>
+              <th>Socio</th>
+              <th>Tipo</th>
+              <th>Mensaje</th>
+              <th>Fecha</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let item of recentAttendance">
+              <td>{{ item.member?.fullName || 'Sin socio' }}</td>
+              <td>{{ item.type }}</td>
+              <td>{{ item.message }}</td>
+              <td>{{ item.createdAt | date:'short' }}</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <ng-template #emptyAttendance>
+        <div class="empty">Aún no hay asistencias registradas.</div>
+      </ng-template>
+    </article>
+  </section>
+</section>

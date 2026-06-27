@@ -1,0 +1,81 @@
+<section class="page">
+  <div class="page-header">
+    <div>
+      <h2>Huellas</h2>
+      <p>Relaciona un socio con su fingerprintId. Regla recomendada: memberId igual a fingerprintId.</p>
+    </div>
+
+    <button class="btn btn-secondary" type="button" (click)="loadData()">Actualizar</button>
+  </div>
+
+  <div *ngIf="error" class="alert error">{{ error }}</div>
+  <div *ngIf="success" class="alert success">{{ success }}</div>
+
+  <article class="card">
+    <form class="form-grid cols-5" (ngSubmit)="createFingerprint()">
+      <div class="field">
+        <label>Socio</label>
+        <select name="memberId" [(ngModel)]="form.memberId" (change)="syncFingerprintId()" required>
+          <option *ngFor="let member of members" [ngValue]="member.id">
+            {{ member.id }} - {{ member.fullName }}
+          </option>
+        </select>
+      </div>
+
+      <div class="field">
+        <label>Fingerprint ID</label>
+        <input type="number" name="fingerprintId" [(ngModel)]="form.fingerprintId" required />
+      </div>
+
+      <div class="field">
+        <label>Dedo</label>
+        <input name="fingerName" [(ngModel)]="form.fingerName" required />
+      </div>
+
+      <button class="btn btn-secondary" type="button" (click)="syncFingerprintId()">
+        Usar ID del socio
+      </button>
+
+      <button class="btn btn-primary" type="submit" [disabled]="saving || !members.length">
+        {{ saving ? 'Guardando...' : 'Registrar huella' }}
+      </button>
+    </form>
+  </article>
+
+  <article class="card">
+    <div class="table-wrap" *ngIf="fingerprints.length; else emptyFingerprints">
+      <table>
+        <thead>
+          <tr>
+            <th>ID</th>
+            <th>Socio</th>
+            <th>Fingerprint ID</th>
+            <th>Dedo</th>
+            <th>Estado</th>
+            <th>Acción</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let fingerprint of fingerprints">
+            <td>{{ fingerprint.id }}</td>
+            <td>{{ fingerprint.member?.fullName || fingerprint.memberId }}</td>
+            <td>{{ fingerprint.fingerprintId }}</td>
+            <td>{{ fingerprint.fingerName }}</td>
+            <td>
+              <span class="badge" [ngClass]="fingerprint.active ? 'success' : 'danger'">
+                {{ fingerprint.active ? 'activa' : 'inactiva' }}
+              </span>
+            </td>
+            <td>
+              <button class="btn btn-danger" type="button" (click)="deleteFingerprint(fingerprint.id)">Eliminar</button>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <ng-template #emptyFingerprints>
+      <div class="empty">No hay huellas registradas.</div>
+    </ng-template>
+  </article>
+</section>

@@ -1,0 +1,31 @@
+.action-row {
+  display: flex;
+  gap: 12px;
+  margin-top: 18px;
+}
+
+.result h3 {
+  margin: 0 0 14px;
+}
+
+.result p {
+  margin: 8px 0;
+}
+
+.result-status {
+  display: inline-flex;
+  border-radius: 999px;
+  padding: 8px 12px;
+  font-weight: 800;
+  margin-bottom: 8px;
+}
+
+.result-status.ok {
+  background: #dfe9e3;
+  color: var(--success);
+}
+
+.result-status.bad {
+  background: #f2dfdf;
+  color: var(--danger);
+}

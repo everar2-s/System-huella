@@ -21,10 +21,10 @@ export class Membership {
   type!: string; // diaria, semanal, mensual, anual
 
   @Column({ type: 'date' })
-  startDate!: string;
+  startDate?: string;
 
   @Column({ type: 'date' })
-  endDate!: string;
+  endDate?: string;
 
   @Column({ default: 'activa' })
   status!: string; // activa, vencida, cancelada

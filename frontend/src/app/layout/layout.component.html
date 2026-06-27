@@ -1,0 +1,89 @@
+<div class="layout" [class.sidebar-collapsed]="sidebarClosed">
+  <aside class="sidebar">
+    <button 
+      class="sidebar-toggle" 
+      type="button" 
+      (click)="toggleSidebar()"
+      [attr.aria-label]="sidebarClosed ? 'Abrir menú' : 'Cerrar menú'"
+    >
+      <i class="bi" [ngClass]="sidebarClosed ? 'bi-chevron-right' : 'bi-chevron-left'"></i>
+    </button>
+
+    <div class="brand">
+      <div class="brand-icon">
+        <i class="bi bi-fingerprint"></i>
+      </div>
+
+      <div class="brand-text">
+        <h2>Gym Access</h2>
+        <p>Control biométrico</p>
+      </div>
+    </div>
+
+    <nav class="menu">
+      <a routerLink="/" routerLinkActive="active" [routerLinkActiveOptions]="{ exact: true }">
+        <i class="bi bi-speedometer2"></i>
+        <span>Dashboard</span>
+      </a>
+
+      <a routerLink="/members" routerLinkActive="active">
+        <i class="bi bi-people"></i>
+        <span>Socios</span>
+      </a>
+
+      <a routerLink="/fingerprints" routerLinkActive="active">
+        <i class="bi bi-fingerprint"></i>
+        <span>Huellas</span>
+      </a>
+
+      <a routerLink="/memberships" routerLinkActive="active">
+        <i class="bi bi-card-checklist"></i>
+        <span>Membresías</span>
+      </a>
+
+      <a routerLink="/attendance" routerLinkActive="active">
+        <i class="bi bi-calendar-check"></i>
+        <span>Asistencias</span>
+      </a>
+
+      <a routerLink="/devices" routerLinkActive="active">
+        <i class="bi bi-cpu"></i>
+        <span>Dispositivos</span>
+      </a>
+
+      <a routerLink="/access" routerLinkActive="active">
+        <i class="bi bi-door-open"></i>
+        <span>Prueba de acceso</span>
+      </a>
+    </nav>
+
+    <button class="logout" type="button" (click)="logout()">
+      <i class="bi bi-box-arrow-left"></i>
+      <span>Cerrar sesión</span>
+    </button>
+  </aside>
+
+  <main class="main">
+    <header class="topbar">
+      <div>
+        <h1>Panel administrativo</h1>
+        <p>Gestión de socios, membresías y accesos del gimnasio</p>
+      </div>
+
+      <div class="admin-card">
+        <div class="admin-avatar">
+          <i class="bi bi-person-circle"></i>
+        </div>
+
+        <div>
+          <strong>{{ authService.user()?.fullName || 'Administrador' }}</strong>
+          <span>{{ authService.user()?.email || 'Sistema Gym' }}</span>
+        </div>
+      </div>
+    </header>
+
+    <section class="content">
+      <router-outlet></router-outlet>
+    </section>
+  </main>
+</div>

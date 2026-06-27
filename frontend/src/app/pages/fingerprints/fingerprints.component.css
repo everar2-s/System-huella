@@ -1,0 +1,9 @@
+.form-grid.cols-5 {
+  grid-template-columns: 1.5fr 1fr 1fr auto auto;
+}
+
+@media (max-width: 1100px) {
+  .form-grid.cols-5 {
+    grid-template-columns: 1fr 1fr;
+  }
+}

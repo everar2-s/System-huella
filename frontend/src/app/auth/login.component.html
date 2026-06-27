@@ -1,0 +1,162 @@
+<div class="auth-page">
+  <section class="auth-hero">
+    <div class="hero-badge">
+      <i class="bi bi-shield-check"></i>
+      <span>Control biométrico</span>
+    </div>
+
+    <h1>Gym Access</h1>
+
+    <p>
+      Sistema administrativo para socios, membresías, huellas, asistencias y dispositivos.
+    </p>
+
+    <div class="hero-features">
+      <span>
+        <i class="bi bi-people"></i>
+        Socios
+      </span>
+
+      <span>
+        <i class="bi bi-fingerprint"></i>
+        Huellas
+      </span>
+
+      <span>
+        <i class="bi bi-calendar-check"></i>
+        Asistencias
+      </span>
+
+      <span>
+        <i class="bi bi-cpu"></i>
+        Dispositivos
+      </span>
+    </div>
+  </section>
+
+  <section class="auth-card">
+    <div class="tabs">
+      <button
+        type="button"
+        [class.active]="mode === 'login'"
+        (click)="setMode('login')"
+      >
+        <i class="bi bi-box-arrow-in-right"></i>
+        Iniciar sesión
+      </button>
+
+      <button
+        type="button"
+        [class.active]="mode === 'register'"
+        (click)="setMode('register')"
+      >
+        <i class="bi bi-person-plus"></i>
+        Crear administrador
+      </button>
+    </div>
+
+    <div *ngIf="error" class="alert error">
+      <i class="bi bi-exclamation-triangle"></i>
+      {{ error }}
+    </div>
+
+    <div *ngIf="success" class="alert success">
+      <i class="bi bi-check-circle"></i>
+      {{ success }}
+    </div>
+
+    <form *ngIf="mode === 'login'" (ngSubmit)="login()" class="form">
+      <div class="field">
+        <label>
+          <i class="bi bi-envelope"></i>
+          Email
+        </label>
+
+        <input
+          type="email"
+          name="loginEmail"
+          [(ngModel)]="loginForm.email"
+          placeholder="admin@gymaccess.com"
+          autocomplete="email"
+          required
+        />
+      </div>
+
+      <div class="field">
+        <label>
+          <i class="bi bi-lock"></i>
+          Contraseña
+        </label>
+
+        <input
+          type="password"
+          name="loginPassword"
+          [(ngModel)]="loginForm.password"
+          placeholder="Ingresa tu contraseña"
+          autocomplete="current-password"
+          required
+        />
+      </div>
+
+      <button class="btn btn-primary" type="submit" [disabled]="loading">
+        <i class="bi" [class.bi-hourglass-split]="loading" [class.bi-door-open]="!loading"></i>
+        {{ loading ? 'Entrando...' : 'Entrar al sistema' }}
+      </button>
+    </form>
+
+    <form *ngIf="mode === 'register'" (ngSubmit)="register()" class="form">
+      <div class="field">
+        <label>
+          <i class="bi bi-person"></i>
+          Nombre completo
+        </label>
+
+        <input
+          name="fullName"
+          [(ngModel)]="registerForm.fullName"
+          placeholder="Nombre del administrador"
+          autocomplete="name"
+          required
+        />
+      </div>
+
+      <div class="field">
+        <label>
+          <i class="bi bi-envelope"></i>
+          Email
+        </label>
+
+        <input
+          type="email"
+          name="registerEmail"
+          [(ngModel)]="registerForm.email"
+          placeholder="admin@gymaccess.com"
+          autocomplete="email"
+          required
+        />
+      </div>
+
+      <div class="field">
+        <label>
+          <i class="bi bi-lock"></i>
+          Contraseña
+        </label>
+
+        <input
+          type="password"
+          name="registerPassword"
+          [(ngModel)]="registerForm.password"
+          placeholder="Mínimo 6 caracteres"
+          autocomplete="new-password"
+          required
+          minlength="6"
+        />
+      </div>
+
+      <button class="btn btn-primary" type="submit" [disabled]="loading">
+        <i class="bi" [class.bi-hourglass-split]="loading" [class.bi-person-check]="!loading"></i>
+        {{ loading ? 'Registrando...' : 'Crear administrador' }}
+      </button>
+    </form>
+  </section>
+</div>

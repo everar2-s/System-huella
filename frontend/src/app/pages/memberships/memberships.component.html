@@ -1,0 +1,130 @@
+<section class="page">
+  <div class="page-header">
+    <div>
+      <h2>Membresías</h2>
+      <p>Controla pagos, vigencias y renovaciones de los socios.</p>
+    </div>
+
+    <button class="btn btn-secondary" type="button" (click)="loadData()">
+      Actualizar
+    </button>
+  </div>
+
+  <div *ngIf="error" class="alert error">{{ error }}</div>
+  <div *ngIf="success" class="alert success">{{ success }}</div>
+
+  <article class="card">
+    <form class="form-grid" (ngSubmit)="createMembership()">
+      <div class="field">
+        <label>Socio</label>
+        <select name="memberId" [(ngModel)]="form.memberId" required>
+          <option *ngFor="let member of members" [ngValue]="member.id">
+            {{ member.id }} - {{ member.fullName }}
+          </option>
+        </select>
+      </div>
+
+      <div class="field">
+        <label>Tipo</label>
+        <select
+          name="type"
+          [(ngModel)]="form.type"
+          (ngModelChange)="onTypeChange()"
+          required
+        >
+          <option value="diaria">Diaria</option>
+          <option value="semanal">Semanal</option>
+          <option value="mensual">Mensual</option>
+          <option value="anual">Anual</option>
+        </select>
+      </div>
+
+      <div class="field">
+        <label>Inicio</label>
+        <input
+          type="date"
+          name="startDate"
+          [(ngModel)]="form.startDate"
+          (ngModelChange)="onStartDateChange()"
+          required
+        />
+      </div>
+
+      <div class="field">
+        <label>Fin</label>
+        <input
+          type="date"
+          name="endDate"
+          [(ngModel)]="form.endDate"
+          required
+        />
+      </div>
+
+      <div class="field">
+        <label>Precio</label>
+        <input
+          type="number"
+          name="price"
+          [(ngModel)]="form.price"
+          required
+        />
+      </div>
+
+      <button
+        class="btn btn-primary"
+        type="submit"
+        [disabled]="saving || !members.length"
+      >
+        {{ saving ? 'Guardando...' : 'Registrar membresía' }}
+      </button>
+    </form>
+  </article>
+
+  <article class="card">
+    <div class="table-wrap" *ngIf="memberships.length; else emptyMemberships">
+      <table>
+        <thead>
+          <tr>
+            <th>ID</th>
+            <th>Socio</th>
+            <th>Tipo</th>
+            <th>Inicio</th>
+            <th>Fin</th>
+            <th>Precio</th>
+            <th>Membresía</th>
+            <th>Acción</th>
+          </tr>
+        </thead>
+
+        <tbody>
+          <tr *ngFor="let membership of memberships">
+            <td>{{ membership.id }}</td>
+            <td>{{ membership.member?.fullName || membership.memberId }}</td>
+            <td>{{ membership.type }}</td>
+            <td>{{ membership.startDate }}</td>
+            <td>{{ membership.endDate }}</td>
+            <td>{{ membership.price | currency:'MXN':'symbol':'1.0-0' }}</td>
+            <td>
+              <span class="badge" [ngClass]="statusClass(membership.status)">
+                {{ membership.status }}
+              </span>
+            </td>
+            <td>
+              <button
+                class="btn btn-danger"
+                type="button"
+                (click)="cancelMembership(membership.id)"
+              >
+                Cancelar
+              </button>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <ng-template #emptyMemberships>
+      <div class="empty">No hay membresías registradas.</div>
+    </ng-template>
+  </article>
+</section>

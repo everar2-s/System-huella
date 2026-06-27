@@ -1,0 +1,60 @@
+<section class="page">
+  <div class="page-header">
+    <div>
+      <h2>Asistencias</h2>
+      <p>Consulta entradas, salidas y accesos denegados.</p>
+    </div>
+
+    <div class="actions">
+      <select [(ngModel)]="filter" name="filter">
+        <option value="todos">Todos</option>
+        <option value="entrada">Entradas</option>
+        <option value="salida">Salidas</option>
+        <option value="permitidos">Permitidos</option>
+        <option value="denegados">Denegados</option>
+      </select>
+      <button class="btn btn-secondary" type="button" (click)="loadAttendance()">Actualizar</button>
+    </div>
+  </div>
+
+  <div *ngIf="error" class="alert error">{{ error }}</div>
+
+  <article class="card">
+    <div class="table-wrap" *ngIf="filteredAttendance.length; else emptyAttendance">
+      <table>
+        <thead>
+          <tr>
+            <th>ID</th>
+            <th>Socio</th>
+            <th>Fingerprint</th>
+            <th>Dispositivo</th>
+            <th>Tipo</th>
+            <th>Resultado</th>
+            <th>Mensaje</th>
+            <th>Fecha</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let item of filteredAttendance">
+            <td>{{ item.id }}</td>
+            <td>{{ item.member?.fullName || 'Sin socio' }}</td>
+            <td>{{ item.fingerprintId || 'N/A' }}</td>
+            <td>{{ item.deviceId || 'N/A' }}</td>
+            <td>{{ item.type }}</td>
+            <td>
+              <span class="badge" [ngClass]="item.accessGranted ? 'success' : 'danger'">
+                {{ item.accessGranted ? 'permitido' : 'denegado' }}
+              </span>
+            </td>
+            <td>{{ item.message }}</td>
+            <td>{{ item.createdAt | date:'short' }}</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <ng-template #emptyAttendance>
+      <div class="empty">No hay registros de asistencia.</div>
+    </ng-template>
+  </article>
+</section>

@@ -1,0 +1,50 @@
+<section class="page">
+  <div class="page-header">
+    <div>
+      <h2>Prueba de acceso</h2>
+      <p>Simula las peticiones que enviará el ESP32 al backend.</p>
+    </div>
+  </div>
+
+  <div *ngIf="error" class="alert error">{{ error }}</div>
+
+  <article class="card">
+    <form class="form-grid cols-3">
+      <div class="field">
+        <label>Fingerprint ID</label>
+        <input type="number" name="fingerprintId" [(ngModel)]="form.fingerprintId" />
+      </div>
+
+      <div class="field">
+        <label>Device ID</label>
+        <input name="deviceId" [(ngModel)]="form.deviceId" />
+      </div>
+
+      <div class="field">
+        <label>API key</label>
+        <input name="apiKey" [(ngModel)]="form.apiKey" />
+      </div>
+    </form>
+
+    <div class="action-row">
+      <button class="btn btn-success" type="button" (click)="checkIn()" [disabled]="loading">
+        Marcar entrada
+      </button>
+
+      <button class="btn btn-secondary" type="button" (click)="checkOut()" [disabled]="loading">
+        Marcar salida
+      </button>
+    </div>
+  </article>
+
+  <article class="card result" *ngIf="result">
+    <h3>Respuesta del backend</h3>
+    <div class="result-status" [class.ok]="result.access" [class.bad]="!result.access">
+      {{ result.access ? 'Acceso permitido' : 'Acceso denegado' }}
+    </div>
+    <p><strong>Mensaje:</strong> {{ result.message }}</p>
+    <p><strong>Tipo:</strong> {{ result.type || 'N/A' }}</p>
+    <p><strong>Dispositivo:</strong> {{ result.deviceId || form.deviceId }}</p>
+    <p *ngIf="result.member"><strong>Socio:</strong> {{ result.member.fullName || result.member.id }}</p>
+  </article>
+</section>
