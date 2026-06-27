@@ -88,18 +88,37 @@
           Contraseña
         </label>
 
-        <input
-          type="password"
-          name="loginPassword"
-          [(ngModel)]="loginForm.password"
-          placeholder="Ingresa tu contraseña"
-          autocomplete="current-password"
-          required
-        />
+        <div class="password-field">
+          <input
+            [type]="showLoginPassword ? 'text' : 'password'"
+            name="loginPassword"
+            [(ngModel)]="loginForm.password"
+            placeholder="Ingresa tu contraseña"
+            autocomplete="current-password"
+            required
+          />
+
+          <button
+            class="password-toggle"
+            type="button"
+            (click)="toggleLoginPassword()"
+            [attr.aria-label]="showLoginPassword ? 'Ocultar contraseña' : 'Mostrar contraseña'"
+          >
+            <i
+              class="bi"
+              [class.bi-eye]="!showLoginPassword"
+              [class.bi-eye-slash]="showLoginPassword"
+            ></i>
+          </button>
+        </div>
       </div>
 
       <button class="btn btn-primary" type="submit" [disabled]="loading">
-        <i class="bi" [class.bi-hourglass-split]="loading" [class.bi-door-open]="!loading"></i>
+        <i
+          class="bi"
+          [class.bi-hourglass-split]="loading"
+          [class.bi-door-open]="!loading"
+        ></i>
         {{ loading ? 'Entrando...' : 'Entrar al sistema' }}
       </button>
     </form>
@@ -142,19 +161,38 @@
           Contraseña
         </label>
 
-        <input
-          type="password"
-          name="registerPassword"
-          [(ngModel)]="registerForm.password"
-          placeholder="Mínimo 6 caracteres"
-          autocomplete="new-password"
-          required
-          minlength="6"
-        />
+        <div class="password-field">
+          <input
+            [type]="showRegisterPassword ? 'text' : 'password'"
+            name="registerPassword"
+            [(ngModel)]="registerForm.password"
+            placeholder="Mínimo 6 caracteres"
+            autocomplete="new-password"
+            required
+            minlength="6"
+          />
+
+          <button
+            class="password-toggle"
+            type="button"
+            (click)="toggleRegisterPassword()"
+            [attr.aria-label]="showRegisterPassword ? 'Ocultar contraseña' : 'Mostrar contraseña'"
+          >
+            <i
+              class="bi"
+              [class.bi-eye]="!showRegisterPassword"
+              [class.bi-eye-slash]="showRegisterPassword"
+            ></i>
+          </button>
+        </div>
       </div>
 
       <button class="btn btn-primary" type="submit" [disabled]="loading">
-        <i class="bi" [class.bi-hourglass-split]="loading" [class.bi-person-check]="!loading"></i>
+        <i
+          class="bi"
+          [class.bi-hourglass-split]="loading"
+          [class.bi-person-check]="!loading"
+        ></i>
         {{ loading ? 'Registrando...' : 'Crear administrador' }}
       </button>
     </form>
