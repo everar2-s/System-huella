@@ -7,6 +7,7 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 
 import { Device } from './device.entity';
+import { CreateDeviceDto } from './dto/create-device.dto';
 
 @Injectable()
 export class DevicesService {
@@ -15,25 +16,27 @@ export class DevicesService {
     private readonly deviceRepository: Repository<Device>,
   ) {}
 
-  async create(data: {
-    deviceId: string;
-    name: string;
-    location?: string;
-    apiKey: string;
-  }) {
+  async create(data: CreateDeviceDto) {
+    const deviceId = data.deviceId.trim();
+    const name = data.name.trim();
+    const location = data.location?.trim() || undefined;
+    const apiKey = data.apiKey.trim();
+
     const existingDevice = await this.deviceRepository.findOne({
-      where: { deviceId: data.deviceId },
+      where: { deviceId },
     });
 
     if (existingDevice) {
-      throw new ConflictException('Ese dispositivo ya existe');
+      throw new ConflictException(
+        'Ya existe un dispositivo con ese deviceId',
+      );
     }
 
     const device = this.deviceRepository.create({
-      deviceId: data.deviceId,
-      name: data.name,
-      location: data.location,
-      apiKey: data.apiKey,
+      deviceId,
+      name,
+      location,
+      apiKey,
       status: 'activo',
     });
 
@@ -51,18 +54,6 @@ export class DevicesService {
   async findOne(id: number) {
     const device = await this.deviceRepository.findOne({
       where: { id },
-    });
-
-    if (!device) {
-      throw new NotFoundException('Dispositivo no encontrado');
-    }
-
-    return device;
-  }
-
-  async findByDeviceId(deviceId: string) {
-    const device = await this.deviceRepository.findOne({
-      where: { deviceId },
     });
 
     if (!device) {

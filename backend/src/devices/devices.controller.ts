@@ -1,6 +1,16 @@
-import {Body,Controller,Get,Param,Patch,Post,} from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  Get,
+  Param,
+  ParseIntPipe,
+  Patch,
+  Post,
+  UseGuards,
+} from '@nestjs/common';
+
 import { DevicesService } from './devices.service';
-import { UseGuards } from '@nestjs/common';
+import { CreateDeviceDto } from './dto/create-device.dto';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 
 @UseGuards(JwtAuthGuard)
@@ -9,15 +19,7 @@ export class DevicesController {
   constructor(private readonly devicesService: DevicesService) {}
 
   @Post()
-  create(
-    @Body()
-    body: {
-      deviceId: string;
-      name: string;
-      location?: string;
-      apiKey: string;
-    },
-  ) {
+  create(@Body() body: CreateDeviceDto) {
     return this.devicesService.create(body);
   }
 
@@ -27,12 +29,12 @@ export class DevicesController {
   }
 
   @Get(':id')
-  findOne(@Param('id') id: string) {
-    return this.devicesService.findOne(Number(id));
+  findOne(@Param('id', ParseIntPipe) id: number) {
+    return this.devicesService.findOne(id);
   }
 
   @Patch(':id/deactivate')
-  deactivate(@Param('id') id: string) {
-    return this.devicesService.deactivate(Number(id));
+  deactivate(@Param('id', ParseIntPipe) id: number) {
+    return this.devicesService.deactivate(id);
   }
 }

@@ -1,5 +1,12 @@
-import { Body, Controller, Headers, Post } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  Headers,
+  Post,
+} from '@nestjs/common';
+
 import { AccessService } from './access.service';
+import { AccessRequestDto } from './dto/access-request.dto';
 
 @Controller('access')
 export class AccessController {
@@ -8,11 +15,7 @@ export class AccessController {
   @Post('checkin')
   checkIn(
     @Headers('x-api-key') apiKey: string,
-    @Body()
-    body: {
-      fingerprintId: number;
-      deviceId?: string;
-    },
+    @Body() body: AccessRequestDto,
   ) {
     return this.accessService.checkIn({
       ...body,
@@ -23,11 +26,7 @@ export class AccessController {
   @Post('checkout')
   checkOut(
     @Headers('x-api-key') apiKey: string,
-    @Body()
-    body: {
-      fingerprintId: number;
-      deviceId?: string;
-    },
+    @Body() body: AccessRequestDto,
   ) {
     return this.accessService.checkOut({
       ...body,
