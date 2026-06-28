@@ -24,6 +24,11 @@ export class MembershipsController {
     return this.membershipsService.create(body);
   }
 
+  @Post('renew')
+  renew(@Body() body: CreateMembershipDto) {
+    return this.membershipsService.renew(body);
+  }
+
   @Get()
   findAll() {
     return this.membershipsService.findAll();

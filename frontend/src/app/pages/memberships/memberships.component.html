@@ -61,14 +61,25 @@
               </span>
             </td>
             <td>
-              <button
-                class="btn btn-danger"
-                type="button"
-                (click)="cancelMembership(membership.id)"
-                [disabled]="membership.status !== 'activa'"
-              >
-                Cancelar
-              </button>
+              <div class="table-actions">
+                <button
+                  class="btn btn-table"
+                  type="button"
+                  (click)="openRenew(membership)"
+                  [disabled]="membership.status !== 'activa'"
+                >
+                  Renovar
+                </button>
+
+                <button
+                  class="btn btn-danger"
+                  type="button"
+                  (click)="cancelMembership(membership.id)"
+                  [disabled]="membership.status !== 'activa'"
+                >
+                  Cancelar
+                </button>
+              </div>
             </td>
           </tr>
         </tbody>
@@ -85,8 +96,14 @@
   <div class="modal-card" (click)="$event.stopPropagation()">
     <div class="modal-header">
       <div>
-        <h3>Registrar membresía</h3>
-        <p>Asigna una nueva vigencia a un socio del gimnasio.</p>
+        <h3>{{ renewing ? 'Renovar membresía' : 'Registrar membresía' }}</h3>
+        <p>
+          {{
+            renewing
+              ? 'Renueva la vigencia del socio seleccionado.'
+              : 'Asigna una nueva vigencia a un socio del gimnasio.'
+          }}
+        </p>
       </div>
 
       <button class="modal-close" type="button" (click)="cancelCreate()">
@@ -94,13 +111,20 @@
       </button>
     </div>
 
-    <form class="modal-form" (ngSubmit)="createMembership()">
+    <form class="modal-form" (ngSubmit)="submitMembership()">
       <div class="field">
         <label>Socio</label>
-        <select name="memberId" [(ngModel)]="form.memberId" required>
+
+        <select
+          name="memberId"
+          [(ngModel)]="form.memberId"
+          [disabled]="renewing"
+          required
+        >
           <option [ngValue]="0" disabled>Selecciona un socio</option>
+
           <option
-            *ngFor="let member of availableMembers"
+            *ngFor="let member of renewing ? members : availableMembers"
             [ngValue]="member.id"
           >
             {{ member.id }} - {{ member.fullName }}
@@ -110,6 +134,7 @@
 
       <div class="field">
         <label>Tipo</label>
+
         <select
           name="type"
           [(ngModel)]="form.type"
@@ -162,7 +187,13 @@
           type="submit"
           [disabled]="saving || !form.memberId"
         >
-          {{ saving ? 'Guardando...' : 'Registrar membresía' }}
+          {{
+            saving
+              ? 'Guardando...'
+              : renewing
+                ? 'Renovar membresía'
+                : 'Registrar membresía'
+          }}
         </button>
 
         <button

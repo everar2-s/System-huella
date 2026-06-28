@@ -23,6 +23,7 @@ export class MembershipsComponent implements OnInit {
   loading = false;
   saving = false;
   creating = false;
+  renewing = false;
 
   error = '';
   success = '';
@@ -66,6 +67,7 @@ export class MembershipsComponent implements OnInit {
   openCreate() {
     this.error = '';
     this.success = '';
+    this.renewing = false;
 
     if (!this.availableMembers.length) {
       this.error =
@@ -79,61 +81,72 @@ export class MembershipsComponent implements OnInit {
     this.creating = true;
   }
 
+  openRenew(membership: Membership) {
+    this.error = '';
+    this.success = '';
+    this.renewing = true;
+
+    this.form = this.getEmptyForm();
+    this.form.memberId = membership.memberId;
+
+    this.creating = true;
+  }
+
   cancelCreate() {
     this.creating = false;
+    this.renewing = false;
     this.form = this.getEmptyForm();
+  }
+
+  submitMembership() {
+    if (this.renewing) {
+      this.renewMembership();
+    } else {
+      this.createMembership();
+    }
   }
 
   createMembership() {
     this.error = '';
     this.success = '';
 
-    if (!this.form.memberId) {
-      this.error = 'Selecciona un socio.';
-      return;
-    }
-
-    const memberAlreadyHasActiveMembership =
-      this.memberships.some(
-        (membership) =>
-          membership.memberId === Number(this.form.memberId) &&
-          membership.status === 'activa',
-      );
-
-    if (memberAlreadyHasActiveMembership) {
-      this.error = 'Este socio ya tiene una membresía activa.';
-      return;
-    }
-
-    if (!this.form.startDate || !this.form.endDate) {
-      this.error = 'Las fechas son obligatorias.';
-      return;
-    }
-
-    if (this.form.endDate < this.form.startDate) {
-      this.error =
-        'La fecha de fin no puede ser menor que la fecha de inicio.';
-      return;
-    }
-
-    if (this.form.price < 0) {
-      this.error = 'El precio no puede ser negativo.';
+    if (!this.validateForm()) {
       return;
     }
 
     this.saving = true;
 
-    const data = {
-      memberId: Number(this.form.memberId),
-      type: this.form.type,
-      startDate: this.form.startDate,
-      endDate: this.form.endDate,
-      price: Number(this.form.price),
-    };
+    const data = this.buildMembershipData();
 
     this.apiService.createMembership(data).subscribe({
       next: () => {
         this.success = 'Membresía registrada correctamente.';
+        this.saving = false;
+        this.cancelCreate();
+        this.loadData();
+      },
+      error: (error) => {
+        this.error = getErrorMessage(error);
+        this.saving = false;
+      },
+    });
+  }
+
+  renewMembership() {
+    this.error = '';
+    this.success = '';
+
+    if (!this.validateForm()) {
+      return;
+    }
+
+    this.saving = true;
+
+    const data = this.buildMembershipData();
+
+    this.apiService.renewMembership(data).subscribe({
+      next: () => {
+        this.success = 'Membresía renovada correctamente.';
         this.saving = false;
         this.cancelCreate();
         this.loadData();
@@ -184,6 +197,41 @@ export class MembershipsComponent implements OnInit {
     }
 
     return 'warning';
+  }
+
+  private validateForm() {
+    if (!this.form.memberId) {
+      this.error = 'Selecciona un socio.';
+      return false;
+    }
+
+    if (!this.form.startDate || !this.form.endDate) {
+      this.error = 'Las fechas son obligatorias.';
+      return false;
+    }
+
+    if (this.form.endDate < this.form.startDate) {
+      this.error =
+        'La fecha de fin no puede ser menor que la fecha de inicio.';
+      return false;
+    }
+
+    if (this.form.price < 0) {
+      this.error = 'El precio no puede ser negativo.';
+      return false;
+    }
+
+    return true;
+  }
+
+  private buildMembershipData() {
+    return {
+      memberId: Number(this.form.memberId),
+      type: this.form.type,
+      startDate: this.form.startDate,
+      endDate: this.form.endDate,
+      price: Number(this.form.price),
+    };
   }
 
   private getEmptyForm() {

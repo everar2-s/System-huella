@@ -27,14 +27,7 @@ export class MembershipsService {
   ) {}
 
   async create(data: CreateMembershipDto) {
-    const startDate = data.startDate;
-    const endDate = data.endDate;
-
-    if (endDate < startDate) {
-      throw new BadRequestException(
-        'La fecha de fin no puede ser menor que la fecha de inicio',
-      );
-    }
+    this.validateDates(data.startDate, data.endDate);
 
     const member = await this.memberRepository.findOne({
       where: { id: data.memberId },
@@ -53,46 +46,49 @@ export class MembershipsService {
 
     if (activeMembership) {
       throw new ConflictException(
-        'Este socio ya tiene una membresía activa',
+        'Este socio ya tiene una membresía activa. Usa renovar.',
       );
     }
 
-    const hasFingerprint = await this.fingerprintRepository.findOne({
+    return this.createActiveMembership(member, data);
+  }
+
+  async renew(data: CreateMembershipDto) {
+    this.validateDates(data.startDate, data.endDate);
+
+    const member = await this.memberRepository.findOne({
+      where: { id: data.memberId },
+    });
+
+    if (!member) {
+      throw new NotFoundException('El socio no existe');
+    }
+
+    const activeMemberships = await this.membershipRepository.find({
       where: {
-        memberId: member.id,
+        memberId: data.memberId,
+        status: 'activa',
       },
     });
 
-    const membership = this.membershipRepository.create({
-      memberId: data.memberId,
-      type: data.type,
-      startDate: data.startDate,
-      endDate: data.endDate,
-      price: data.price ?? 0,
-      status: 'activa',
-      member,
-    });
-
-    const savedMembership =
-      await this.membershipRepository.save(membership);
-
-    member.membershipStart = data.startDate;
-    member.membershipEnd = data.endDate;
-
-    if (hasFingerprint) {
-      member.status = 'activo';
-
-      await this.fingerprintRepository.update(
-        { memberId: member.id },
-        { active: true },
+    if (!activeMemberships.length) {
+      throw new NotFoundException(
+        'Este socio no tiene una membresía activa para renovar',
       );
-    } else {
-      member.status = 'pendiente_huella';
     }
 
-    await this.memberRepository.save(member);
+    for (const membership of activeMemberships) {
+      membership.status = 'cancelada';
+      await this.membershipRepository.save(membership);
+    }
 
-    return savedMembership;
+    const newMembership = await this.createActiveMembership(member, data);
+
+    return {
+      message: 'Membresía renovada correctamente',
+      previousMembershipsCancelled: activeMemberships.length,
+      membership: newMembership,
+    };
   }
 
   findAll() {
@@ -189,5 +185,55 @@ export class MembershipsService {
   @Cron(CronExpression.EVERY_DAY_AT_MIDNIGHT)
   async handleExpiredMemberships() {
     await this.expireExpiredMemberships();
+  }
+
+  private validateDates(startDate: string, endDate: string) {
+    if (endDate < startDate) {
+      throw new BadRequestException(
+        'La fecha de fin no puede ser menor que la fecha de inicio',
+      );
+    }
+  }
+
+  private async createActiveMembership(
+    member: Member,
+    data: CreateMembershipDto,
+  ) {
+    const hasFingerprint = await this.fingerprintRepository.findOne({
+      where: {
+        memberId: member.id,
+      },
+    });
+
+    const membership = this.membershipRepository.create({
+      memberId: data.memberId,
+      type: data.type,
+      startDate: data.startDate,
+      endDate: data.endDate,
+      price: data.price ?? 0,
+      status: 'activa',
+      member,
+    });
+
+    const savedMembership =
+      await this.membershipRepository.save(membership);
+
+    member.membershipStart = data.startDate;
+    member.membershipEnd = data.endDate;
+
+    if (hasFingerprint) {
+      member.status = 'activo';
+
+      await this.fingerprintRepository.update(
+        { memberId: member.id },
+        { active: true },
+      );
+    } else {
+      member.status = 'pendiente_huella';
+    }
+
+    await this.memberRepository.save(member);
+
+    return savedMembership;
   }
 }

@@ -48,6 +48,15 @@ updateMember(
   getMemberships() {
     return this.http.get<Membership[]>(`${this.baseUrl}/memberships`);
   }
+  renewMembership(data: {
+  memberId: number;
+  type: string;
+  startDate: string;
+  endDate: string;
+  price: number;
+}) {
+  return this.http.post(`${this.baseUrl}/memberships/renew`, data);
+}
 
   createMembership(data: {
     memberId: number;
