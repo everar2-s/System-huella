@@ -421,3 +421,50 @@ tbody tr:hover {
     width: 100%;
   }
 }
+.table-actions {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+.btn-warning {
+  height: 38px;
+  padding: 0 14px;
+  border-radius: 10px;
+  background: #fff7ed;
+  color: #c2410c;
+  border: 1px solid #fed7aa;
+  font-size: 0.88rem;
+  font-weight: 600;
+}
+
+.btn-warning:hover:not(:disabled) {
+  background: #ffedd5;
+}
+
+.btn-success-action {
+  height: 38px;
+  padding: 0 14px;
+  border-radius: 10px;
+  background: #ecfdf3;
+  color: #027a48;
+  border: 1px solid #a6f4c5;
+  font-size: 0.88rem;
+  font-weight: 600;
+}
+
+.btn-success-action:hover:not(:disabled) {
+  background: #d1fadf;
+}
+
+@media (max-width: 720px) {
+  .table-actions {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .table-actions .btn {
+    width: 100%;
+  }
+}

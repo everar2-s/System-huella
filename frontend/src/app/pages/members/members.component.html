@@ -2,7 +2,7 @@
   <div class="page-top">
     <div>
       <h2>Socios</h2>
-      <p>Registra, consulta y edita los miembros del gimnasio.</p>
+      <p>Registra, consulta y administra los miembros del gimnasio.</p>
     </div>
 
     <div class="page-actions">
@@ -52,13 +52,33 @@
               </span>
             </td>
             <td>
-              <button
-                class="btn btn-table"
-                type="button"
-                (click)="openEdit(member)"
-              >
-                Editar
-              </button>
+              <div class="table-actions">
+                <button
+                  class="btn btn-table"
+                  type="button"
+                  (click)="openEdit(member)"
+                >
+                  Editar
+                </button>
+
+                <button
+                  *ngIf="member.status !== 'suspendido'"
+                  class="btn btn-warning"
+                  type="button"
+                  (click)="suspendMember(member)"
+                >
+                  Suspender
+                </button>
+
+                <button
+                  *ngIf="member.status === 'suspendido'"
+                  class="btn btn-success-action"
+                  type="button"
+                  (click)="reactivateMember(member)"
+                >
+                  Reactivar
+                </button>
+              </div>
             </td>
           </tr>
         </tbody>

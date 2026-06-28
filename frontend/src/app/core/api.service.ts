@@ -32,6 +32,13 @@ updateMember(
   createMember(data: Partial<Member>) {
     return this.http.post<Member>(`${this.baseUrl}/members`, data);
   }
+  suspendMember(id: number) {
+  return this.http.patch(`${this.baseUrl}/members/${id}/suspend`, {});
+}
+
+reactivateMember(id: number) {
+  return this.http.patch(`${this.baseUrl}/members/${id}/reactivate`, {});
+}
 
   getFingerprints() {
     return this.http.get<Fingerprint[]>(`${this.baseUrl}/fingerprints`);

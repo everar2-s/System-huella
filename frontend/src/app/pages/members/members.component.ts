@@ -164,6 +164,52 @@ export class MembersComponent implements OnInit {
     });
   }
 
+  suspendMember(member: Member) {
+    const confirmSuspend = confirm(
+      `¿Seguro que deseas suspender a ${member.fullName}?`,
+    );
+
+    if (!confirmSuspend) {
+      return;
+    }
+
+    this.error = '';
+    this.success = '';
+
+    this.apiService.suspendMember(member.id).subscribe({
+      next: () => {
+        this.success = 'Socio suspendido correctamente.';
+        this.loadMembers();
+      },
+      error: (error) => {
+        this.error = getErrorMessage(error);
+      },
+    });
+  }
+
+  reactivateMember(member: Member) {
+    const confirmReactivate = confirm(
+      `¿Seguro que deseas reactivar a ${member.fullName}?`,
+    );
+
+    if (!confirmReactivate) {
+      return;
+    }
+
+    this.error = '';
+    this.success = '';
+
+    this.apiService.reactivateMember(member.id).subscribe({
+      next: () => {
+        this.success = 'Socio reactivado correctamente.';
+        this.loadMembers();
+      },
+      error: (error) => {
+        this.error = getErrorMessage(error);
+      },
+    });
+  }
+
   statusClass(status: string) {
     if (status === 'activo') return 'success';
 

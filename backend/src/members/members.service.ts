@@ -8,6 +8,7 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Not, Repository } from 'typeorm';
 
 import { Member } from './member.entity';
+import { Fingerprint } from '../fingerprints/fingerprint.entity';
 import { CreateMemberDto } from './dto/create-member.dto';
 import { UpdateMemberDto } from './dto/update-member.dto';
 
@@ -16,6 +17,9 @@ export class MembersService {
   constructor(
     @InjectRepository(Member)
     private readonly memberRepository: Repository<Member>,
+
+    @InjectRepository(Fingerprint)
+    private readonly fingerprintRepository: Repository<Fingerprint>,
   ) {}
 
   async create(data: CreateMemberDto) {
@@ -152,6 +156,83 @@ export class MembersService {
     return {
       message: 'Socio actualizado correctamente',
       member: savedMember,
+    };
+  }
+
+  async suspend(id: number) {
+    const member = await this.findOne(id);
+
+    member.status = 'suspendido';
+    await this.memberRepository.save(member);
+
+    await this.fingerprintRepository.update(
+      { memberId: member.id },
+      { active: false },
+    );
+
+    return {
+      message: 'Socio suspendido correctamente',
+      member: {
+        id: member.id,
+        fullName: member.fullName,
+        status: member.status,
+      },
+    };
+  }
+
+  async reactivate(id: number) {
+    const member = await this.findOne(id);
+
+    const today = new Date().toISOString().slice(0, 10);
+
+    if (member.membershipEnd < today) {
+      member.status = 'vencido';
+      await this.memberRepository.save(member);
+
+      await this.fingerprintRepository.update(
+        { memberId: member.id },
+        { active: false },
+      );
+
+      throw new BadRequestException(
+        'No se puede reactivar. La membresía está vencida',
+      );
+    }
+
+    const fingerprint = await this.fingerprintRepository.findOne({
+      where: {
+        memberId: member.id,
+      },
+    });
+
+    if (!fingerprint) {
+      member.status = 'pendiente_huella';
+      await this.memberRepository.save(member);
+
+      return {
+        message:
+          'Socio reactivado parcialmente. Falta registrar huella',
+        member: {
+          id: member.id,
+          fullName: member.fullName,
+          status: member.status,
+        },
+      };
+    }
+
+    fingerprint.active = true;
+    await this.fingerprintRepository.save(fingerprint);
+
+    member.status = 'activo';
+    await this.memberRepository.save(member);
+
+    return {
+      message: 'Socio reactivado correctamente',
+      member: {
+        id: member.id,
+        fullName: member.fullName,
+        status: member.status,
+      },
     };
   }
 }

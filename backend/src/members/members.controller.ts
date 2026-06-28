@@ -41,4 +41,14 @@ export class MembersController {
   ) {
     return this.membersService.update(id, body);
   }
+
+  @Patch(':id/suspend')
+  suspend(@Param('id', ParseIntPipe) id: number) {
+    return this.membersService.suspend(id);
+  }
+
+  @Patch(':id/reactivate')
+  reactivate(@Param('id', ParseIntPipe) id: number) {
+    return this.membersService.reactivate(id);
+  }
 }
