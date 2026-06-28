@@ -28,10 +28,47 @@ export class MembershipsComponent implements OnInit {
   error = '';
   success = '';
 
+  filterId = '';
+  filterSocio = '';
+  filterType = '';
+  filterStatus = '';
+
   form = this.getEmptyForm();
 
   ngOnInit() {
     this.loadData();
+  }
+
+  get filteredMemberships() {
+    const id = this.filterId.trim();
+    const socio = this.normalizeText(this.filterSocio);
+    const type = this.filterType;
+    const status = this.filterStatus;
+
+    return [...this.memberships]
+      .sort((a, b) => a.id - b.id)
+      .filter((membership) => {
+        const memberName = membership.member?.fullName || '';
+
+        const matchesId =
+          !id || membership.id.toString().includes(id);
+
+        const matchesSocio =
+          !socio || this.normalizeText(memberName).includes(socio);
+
+        const matchesType =
+          !type || membership.type === type;
+
+        const matchesStatus =
+          !status || membership.status === status;
+
+        return (
+          matchesId &&
+          matchesSocio &&
+          matchesType &&
+          matchesStatus
+        );
+      });
   }
 
   loadData() {
@@ -44,7 +81,7 @@ export class MembershipsComponent implements OnInit {
     }).subscribe({
       next: ({ members, memberships }) => {
         this.members = members;
-        this.memberships = memberships;
+        this.memberships = memberships.sort((a, b) => a.id - b.id);
         this.loading = false;
       },
       error: (error) => {
@@ -52,6 +89,13 @@ export class MembershipsComponent implements OnInit {
         this.loading = false;
       },
     });
+  }
+
+  clearFilters() {
+    this.filterId = '';
+    this.filterSocio = '';
+    this.filterType = '';
+    this.filterStatus = '';
   }
 
   get availableMembers() {
@@ -306,5 +350,13 @@ export class MembershipsComponent implements OnInit {
     }
 
     return date.toISOString().slice(0, 10);
+  }
+
+  private normalizeText(value: string) {
+    return value
+      .toLowerCase()
+      .normalize('NFD')
+      .replace(/[\u0300-\u036f]/g, '')
+      .trim();
   }
 }

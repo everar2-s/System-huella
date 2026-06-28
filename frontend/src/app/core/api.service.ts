@@ -83,6 +83,7 @@ reactivateMember(id: number) {
     return this.http.get<AttendanceLog[]>(`${this.baseUrl}/attendance`);
   }
 
+
   getDevices() {
     return this.http.get<Device[]>(`${this.baseUrl}/devices`);
   }

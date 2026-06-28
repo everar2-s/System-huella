@@ -24,15 +24,79 @@
   <div *ngIf="error" class="alert error">{{ error }}</div>
   <div *ngIf="success" class="alert success">{{ success }}</div>
 
+  <article class="card filters-card">
+    <div class="section-head">
+      <div>
+        <h3>Filtros</h3>
+        <!--<span>Busca membresías por ID, socio, tipo o estatus.</span>-->
+      </div>
+    </div>
+
+    <div class="filters-grid">
+      <div class="field">
+        <label>ID</label>
+        <input
+          type="text"
+          name="filterId"
+          [(ngModel)]="filterId"
+          placeholder="Ejemplo: 1"
+        />
+      </div>
+
+      <div class="field">
+        <label>Socio</label>
+        <input
+          type="text"
+          name="filterSocio"
+          [(ngModel)]="filterSocio"
+          placeholder="Nombre del socio"
+        />
+      </div>
+
+      <div class="field">
+        <label>Tipo</label>
+        <select name="filterType" [(ngModel)]="filterType">
+          <option value="">Todos</option>
+          <option value="diaria">Diaria</option>
+          <option value="semanal">Semanal</option>
+          <option value="mensual">Mensual</option>
+          <option value="anual">Anual</option>
+        </select>
+      </div>
+
+      <div class="field">
+        <label>Estatus</label>
+        <select name="filterStatus" [(ngModel)]="filterStatus">
+          <option value="">Todos</option>
+          <option value="activa">Activa</option>
+          <option value="suspendida">Suspendida</option>
+          <option value="cancelada">Cancelada</option>
+          <option value="vencida">Vencida</option>
+        </select>
+      </div>
+
+      <div class="filter-actions">
+        <button class="btn btn-outline" type="button" (click)="clearFilters()">
+          Limpiar filtros
+        </button>
+      </div>
+    </div>
+  </article>
+
   <article class="card table-card">
     <div class="section-head">
       <div>
         <h3>Listado de membresías</h3>
-        <span>{{ memberships.length }} registro(s)</span>
+        <span>
+          {{ filteredMemberships.length }} de {{ memberships.length }} registro(s)
+        </span>
       </div>
     </div>
 
-    <div class="table-wrap" *ngIf="memberships.length; else emptyMemberships">
+    <div
+      class="table-wrap"
+      *ngIf="filteredMemberships.length; else emptyMemberships"
+    >
       <table>
         <thead>
           <tr>
@@ -48,7 +112,7 @@
         </thead>
 
         <tbody>
-          <tr *ngFor="let membership of memberships">
+          <tr *ngFor="let membership of filteredMemberships">
             <td>#{{ membership.id }}</td>
             <td>{{ membership.member?.fullName || membership.memberId }}</td>
             <td>{{ membership.type }}</td>
@@ -87,7 +151,7 @@
     </div>
 
     <ng-template #emptyMemberships>
-      <div class="empty">No hay membresías registradas.</div>
+      <div class="empty">No hay membresías que coincidan con los filtros.</div>
     </ng-template>
   </article>
 </section>

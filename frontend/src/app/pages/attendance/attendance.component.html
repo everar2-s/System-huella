@@ -1,26 +1,84 @@
-<section class="page">
-  <div class="page-header">
+<section class="page attendance-page">
+  <div class="page-top">
     <div>
       <h2>Asistencias</h2>
-      <p>Consulta entradas, salidas y accesos denegados.</p>
+      <p>Consulta entradas, salidas y accesos denegados del gimnasio.</p>
     </div>
 
-    <div class="actions">
-      <select [(ngModel)]="filter" name="filter">
-        <option value="todos">Todos</option>
-        <option value="entrada">Entradas</option>
-        <option value="salida">Salidas</option>
-        <option value="permitidos">Permitidos</option>
-        <option value="denegados">Denegados</option>
-      </select>
-      <button class="btn btn-secondary" type="button" (click)="loadAttendance()">Actualizar</button>
+    <div class="page-actions">
+      <button class="btn btn-light" type="button" (click)="loadAttendance()">
+        Actualizar
+      </button>
     </div>
   </div>
 
   <div *ngIf="error" class="alert error">{{ error }}</div>
 
-  <article class="card">
-    <div class="table-wrap" *ngIf="filteredAttendance.length; else emptyAttendance">
+  <article class="card filters-card">
+    <div class="section-head">
+      <div>
+        <h3>Filtros</h3>
+        <span>Busca asistencias por socio, fecha, tipo o resultado.</span>
+      </div>
+    </div>
+
+    <div class="filters-grid">
+      <div class="field">
+        <label>Socio</label>
+        <input
+          type="text"
+          name="filterSocio"
+          [(ngModel)]="filterSocio"
+          placeholder="Nombre o ID del socio"
+        />
+      </div>
+
+      <div class="field">
+        <label>Fecha</label>
+        <input
+          type="date"
+          name="filterDate"
+          [(ngModel)]="filterDate"
+        />
+      </div>
+
+      <div class="field">
+        <label>Tipo</label>
+        <select name="filterType" [(ngModel)]="filterType">
+          <option value="">Todos</option>
+          <option value="entrada">Entrada</option>
+          <option value="salida">Salida</option>
+        </select>
+      </div>
+
+      <div class="field">
+        <label>Resultado</label>
+        <select name="filterResult" [(ngModel)]="filterResult">
+          <option value="">Todos</option>
+          <option value="permitido">Permitido</option>
+          <option value="denegado">Denegado</option>
+        </select>
+      </div>
+
+      <div class="filter-actions">
+        <button class="btn btn-outline" type="button" (click)="clearFilters()">
+          Limpiar filtros
+        </button>
+      </div>
+    </div>
+  </article>
+
+  <article class="card table-card">
+    <div class="section-head">
+      <div>
+        <h3>Listado de asistencias</h3>
+        <span>
+          {{ filteredAttendance.length }} de {{ attendance.length }} registro(s)
+        </span>
+      </div>
+    </div>
+
+    <div class="table-wrap" *ngIf="filteredAttendance.length; else emptyLogs">
       <table>
         <thead>
           <tr>
@@ -31,30 +89,45 @@
             <th>Tipo</th>
             <th>Resultado</th>
             <th>Mensaje</th>
-            <th>Fecha</th>
+            <th>Fecha y hora</th>
           </tr>
         </thead>
+
         <tbody>
-          <tr *ngFor="let item of filteredAttendance">
-            <td>{{ item.id }}</td>
-            <td>{{ item.member?.fullName || 'Sin socio' }}</td>
-            <td>{{ item.fingerprintId || 'N/A' }}</td>
-            <td>{{ item.deviceId || 'N/A' }}</td>
-            <td>{{ item.type }}</td>
+          <tr *ngFor="let log of filteredAttendance">
+            <td>#{{ log.id }}</td>
+
             <td>
-              <span class="badge" [ngClass]="item.accessGranted ? 'success' : 'danger'">
-                {{ item.accessGranted ? 'permitido' : 'denegado' }}
+              {{ log.member?.fullName || 'Sin socio' }}
+              <span *ngIf="log.memberId">#{{ log.memberId }}</span>
+            </td>
+
+            <td>{{ log.fingerprintId ?? 'Sin fingerprint' }}</td>
+
+            <td>{{ log.deviceId || 'Sin dispositivo' }}</td>
+
+            <td>
+              <span class="badge" [ngClass]="typeClass(log.type)">
+                {{ log.type }}
               </span>
             </td>
-            <td>{{ item.message }}</td>
-            <td>{{ item.createdAt | date:'short' }}</td>
+
+            <td>
+              <span class="badge" [ngClass]="resultClass(log.accessGranted)">
+                {{ resultText(log.accessGranted) }}
+              </span>
+            </td>
+
+            <td>{{ log.message }}</td>
+
+            <td>{{ log.createdAt | date:'dd/MM/yyyy HH:mm:ss' }}</td>
           </tr>
         </tbody>
       </table>
     </div>
 
-    <ng-template #emptyAttendance>
-      <div class="empty">No hay registros de asistencia.</div>
+    <ng-template #emptyLogs>
+      <div class="empty">No hay asistencias que coincidan con los filtros.</div>
     </ng-template>
   </article>
 </section>

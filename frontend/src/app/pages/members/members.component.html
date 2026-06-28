@@ -19,15 +19,69 @@
   <div *ngIf="error" class="alert error">{{ error }}</div>
   <div *ngIf="success" class="alert success">{{ success }}</div>
 
+  <article class="card filters-card">
+    <div class="section-head">
+      <!-- Filtros 
+      <div>
+        <h3>Filtros</h3>
+        <span>Busca socios por ID, nombre o status.</span>
+      </div>
+      -->
+          <h3>Filtros</h3>
+    </div>
+
+    <div class="filters-grid">
+      <div class="field">
+        <label>ID</label>
+        <input
+          type="text"
+          name="filterId"
+          [(ngModel)]="filterId"
+          placeholder="Ejemplo: 1"
+        />
+      </div>
+
+      <div class="field">
+        <label>Socio</label>
+        <input
+          type="text"
+          name="filterSocio"
+          [(ngModel)]="filterSocio"
+          placeholder="Nombre del socio"
+        />
+      </div>
+
+      <div class="field">
+        <label>Status</label>
+        <select name="filterStatus" [(ngModel)]="filterStatus">
+          <option value="">Todos</option>
+          <option value="activo">Activo</option>
+          <option value="pendiente_huella">Pendiente de huella</option>
+          <option value="suspendido">Suspendido</option>
+          <option value="vencido">Vencido</option>
+          <option value="inactivo">Inactivo</option>
+        </select>
+      </div>
+
+      <div class="filter-actions">
+        <button class="btn btn-outline" type="button" (click)="clearFilters()">
+          Limpiar filtros
+        </button>
+      </div>
+    </div>
+  </article>
+
   <article class="card table-card">
     <div class="section-head">
       <div>
         <h3>Listado de socios</h3>
-        <span>{{ members.length }} registro(s)</span>
+        <span>
+          {{ filteredMembers.length }} de {{ members.length }} registro(s)
+        </span>
       </div>
     </div>
 
-    <div class="table-wrap" *ngIf="members.length; else emptyMembers">
+    <div class="table-wrap" *ngIf="filteredMembers.length; else emptyMembers">
       <table>
         <thead>
           <tr>
@@ -41,7 +95,7 @@
         </thead>
 
         <tbody>
-          <tr *ngFor="let member of members">
+          <tr *ngFor="let member of filteredMembers">
             <td>#{{ member.id }}</td>
             <td>{{ member.fullName }}</td>
             <td>{{ member.phone || 'Sin teléfono' }}</td>
@@ -86,7 +140,7 @@
     </div>
 
     <ng-template #emptyMembers>
-      <div class="empty">No hay socios registrados.</div>
+      <div class="empty">No hay socios que coincidan con los filtros.</div>
     </ng-template>
   </article>
 </section>

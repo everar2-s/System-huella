@@ -26,6 +26,10 @@ export class MembersComponent implements OnInit {
   error = '';
   success = '';
 
+  filterId = '';
+  filterSocio = '';
+  filterStatus = '';
+
   form = this.getEmptyForm();
 
   editForm = {
@@ -39,13 +43,32 @@ export class MembersComponent implements OnInit {
     this.loadMembers();
   }
 
+  get filteredMembers() {
+    const id = this.filterId.trim();
+    const socio = this.normalizeText(this.filterSocio);
+    const status = this.filterStatus;
+
+    return [...this.members]
+      .sort((a, b) => a.id - b.id)
+      .filter((member) => {
+        const matchesId = !id || member.id.toString().includes(id);
+
+        const matchesSocio =
+          !socio || this.normalizeText(member.fullName).includes(socio);
+
+        const matchesStatus = !status || member.status === status;
+
+        return matchesId && matchesSocio && matchesStatus;
+      });
+  }
+
   loadMembers() {
     this.loading = true;
     this.error = '';
 
     this.apiService.getMembers().subscribe({
       next: (members) => {
-        this.members = members;
+        this.members = members.sort((a, b) => a.id - b.id);
         this.loading = false;
       },
       error: (error) => {
@@ -53,6 +76,12 @@ export class MembersComponent implements OnInit {
         this.loading = false;
       },
     });
+  }
+
+  clearFilters() {
+    this.filterId = '';
+    this.filterSocio = '';
+    this.filterStatus = '';
   }
 
   openCreate() {
@@ -222,6 +251,14 @@ export class MembersComponent implements OnInit {
     }
 
     return 'warning';
+  }
+
+  private normalizeText(value: string) {
+    return value
+      .toLowerCase()
+      .normalize('NFD')
+      .replace(/[\u0300-\u036f]/g, '')
+      .trim();
   }
 
   private getEmptyForm() {
