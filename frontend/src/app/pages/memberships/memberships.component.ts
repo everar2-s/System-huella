@@ -22,6 +22,8 @@ export class MembershipsComponent implements OnInit {
 
   loading = false;
   saving = false;
+  creating = false;
+
   error = '';
   success = '';
 
@@ -43,8 +45,8 @@ export class MembershipsComponent implements OnInit {
         this.members = members;
         this.memberships = memberships;
 
-        if (members.length && !this.form.memberId) {
-          this.form.memberId = members[0].id;
+        if (this.members.length && !this.form.memberId) {
+          this.form.memberId = this.members[0].id;
         }
 
         this.loading = false;
@@ -56,27 +58,63 @@ export class MembershipsComponent implements OnInit {
     });
   }
 
-  createMembership() {
-    this.saving = true;
+  openCreate() {
     this.error = '';
     this.success = '';
 
-    this.apiService.createMembership({
+    this.form = this.getEmptyForm();
+
+    if (this.members.length) {
+      this.form.memberId = this.members[0].id;
+    }
+
+    this.creating = true;
+  }
+
+  cancelCreate() {
+    this.creating = false;
+    this.form = this.getEmptyForm();
+  }
+
+  createMembership() {
+    this.error = '';
+    this.success = '';
+
+    if (!this.form.memberId) {
+      this.error = 'Selecciona un socio.';
+      return;
+    }
+
+    if (!this.form.startDate || !this.form.endDate) {
+      this.error = 'Las fechas son obligatorias.';
+      return;
+    }
+
+    if (this.form.endDate < this.form.startDate) {
+      this.error = 'La fecha de fin no puede ser menor que la fecha de inicio.';
+      return;
+    }
+
+    if (this.form.price < 0) {
+      this.error = 'El precio no puede ser negativo.';
+      return;
+    }
+
+    this.saving = true;
+
+    const data = {
       memberId: Number(this.form.memberId),
       type: this.form.type,
       startDate: this.form.startDate,
       endDate: this.form.endDate,
       price: Number(this.form.price),
-    }).subscribe({
+    };
+
+    this.apiService.createMembership(data).subscribe({
       next: () => {
         this.success = 'Membresía registrada correctamente.';
-        this.form = this.getEmptyForm();
-
-        if (this.members.length) {
-          this.form.memberId = this.members[0].id;
-        }
-
         this.saving = false;
+        this.cancelCreate();
         this.loadData();
       },
       error: (error) => {
@@ -87,7 +125,16 @@ export class MembershipsComponent implements OnInit {
   }
 
   cancelMembership(id: number) {
-    if (!confirm('¿Deseas cancelar esta membresía?')) return;
+    const confirmCancel = confirm(
+      '¿Seguro que deseas cancelar esta membresía?',
+    );
+
+    if (!confirmCancel) {
+      return;
+    }
+
+    this.error = '';
+    this.success = '';
 
     this.apiService.cancelMembership(id).subscribe({
       next: () => {
@@ -101,70 +148,81 @@ export class MembershipsComponent implements OnInit {
   }
 
   onTypeChange() {
-    this.updateDatesByMembershipType();
+    this.applyMembershipDefaults();
   }
 
   onStartDateChange() {
-    this.updateDatesByMembershipType();
-  }
-
-  private updateDatesByMembershipType() {
-    if (!this.form.startDate) return;
-
-    const startDate = this.parseDate(this.form.startDate);
-    const endDate = new Date(startDate);
-
-    switch (this.form.type) {
-      case 'diaria':
-        break;
-
-      case 'semanal':
-        endDate.setDate(endDate.getDate() + 7);
-        break;
-
-      case 'mensual':
-        endDate.setMonth(endDate.getMonth() + 1);
-        break;
-
-      case 'anual':
-        endDate.setFullYear(endDate.getFullYear() + 1);
-        break;
-    }
-
-    this.form.endDate = this.formatDate(endDate);
+    this.applyMembershipDefaults(false);
   }
 
   statusClass(status: string) {
     if (status === 'activa') return 'success';
-    if (status === 'cancelada' || status === 'vencida') return 'danger';
+
+    if (status === 'vencida' || status === 'cancelada') {
+      return 'danger';
+    }
+
     return 'warning';
   }
 
   private getEmptyForm() {
-    const today = new Date();
-    const endDate = new Date(today);
-
-    endDate.setMonth(endDate.getMonth() + 1);
+    const today = new Date().toISOString().slice(0, 10);
 
     return {
       memberId: 0,
       type: 'mensual',
-      startDate: this.formatDate(today),
-      endDate: this.formatDate(endDate),
+      startDate: today,
+      endDate: this.calculateEndDate(today, 'mensual'),
       price: 500,
     };
   }
 
-  private parseDate(value: string) {
-    const [year, month, day] = value.split('-').map(Number);
-    return new Date(year, month - 1, day);
+  private applyMembershipDefaults(updatePrice = true) {
+    this.form.endDate = this.calculateEndDate(
+      this.form.startDate,
+      this.form.type,
+    );
+
+    if (!updatePrice) {
+      return;
+    }
+
+    if (this.form.type === 'diaria') {
+      this.form.price = 50;
+    }
+
+    if (this.form.type === 'semanal') {
+      this.form.price = 150;
+    }
+
+    if (this.form.type === 'mensual') {
+      this.form.price = 500;
+    }
+
+    if (this.form.type === 'anual') {
+      this.form.price = 5000;
+    }
   }
 
-  private formatDate(date: Date) {
-    const year = date.getFullYear();
-    const month = String(date.getMonth() + 1).padStart(2, '0');
-    const day = String(date.getDate()).padStart(2, '0');
+  private calculateEndDate(startDate: string, type: string) {
+    const date = new Date(`${startDate}T00:00:00`);
 
-    return `${year}-${month}-${day}`;
+    if (type === 'diaria') {
+      date.setDate(date.getDate());
+    }
+
+    if (type === 'semanal') {
+      date.setDate(date.getDate() + 7);
+    }
+
+    if (type === 'mensual') {
+      date.setMonth(date.getMonth() + 1);
+    }
+
+    if (type === 'anual') {
+      date.setFullYear(date.getFullYear() + 1);
+    }
+
+    return date.toISOString().slice(0, 10);
   }
 }

@@ -1,6 +1,7 @@
 import { CommonModule } from '@angular/common';
 import { Component, OnInit, inject } from '@angular/core';
 import { FormsModule } from '@angular/forms';
+
 import { ApiService } from '../../core/api.service';
 import { Device } from '../../core/models';
 import { getErrorMessage } from '../../core/error.util';
@@ -16,17 +17,15 @@ export class DevicesComponent implements OnInit {
   private readonly apiService = inject(ApiService);
 
   devices: Device[] = [];
+
   loading = false;
   saving = false;
+  creating = false;
+
   error = '';
   success = '';
 
-  form = {
-    deviceId: 'ESP32-ENTRADA-01',
-    name: 'Lector de entrada principal',
-    location: 'Recepción',
-    apiKey: 'gym_esp32_1234',
-  };
+  form = this.getEmptyForm();
 
   ngOnInit() {
     this.loadDevices();
@@ -48,15 +47,56 @@ export class DevicesComponent implements OnInit {
     });
   }
 
+  openCreate() {
+    this.error = '';
+    this.success = '';
+    this.form = this.getEmptyForm();
+    this.creating = true;
+  }
+
+  cancelCreate() {
+    this.creating = false;
+    this.form = this.getEmptyForm();
+  }
+
   createDevice() {
-    this.saving = true;
     this.error = '';
     this.success = '';
 
-    this.apiService.createDevice(this.form).subscribe({
+    const deviceId = this.form.deviceId.trim();
+    const name = this.form.name.trim();
+    const location = this.form.location.trim();
+    const apiKey = this.form.apiKey.trim();
+
+    if (!deviceId) {
+      this.error = 'El deviceId es obligatorio.';
+      return;
+    }
+
+    if (!name) {
+      this.error = 'El nombre del dispositivo es obligatorio.';
+      return;
+    }
+
+    if (!apiKey) {
+      this.error = 'La apiKey es obligatoria.';
+      return;
+    }
+
+    this.saving = true;
+
+    const data = {
+      deviceId,
+      name,
+      location,
+      apiKey,
+    };
+
+    this.apiService.createDevice(data).subscribe({
       next: () => {
         this.success = 'Dispositivo registrado correctamente.';
         this.saving = false;
+        this.cancelCreate();
         this.loadDevices();
       },
       error: (error) => {
@@ -67,7 +107,16 @@ export class DevicesComponent implements OnInit {
   }
 
   deactivateDevice(id: number) {
-    if (!confirm('¿Deseas desactivar este dispositivo?')) return;
+    const confirmDeactivate = confirm(
+      '¿Seguro que deseas desactivar este dispositivo?',
+    );
+
+    if (!confirmDeactivate) {
+      return;
+    }
+
+    this.error = '';
+    this.success = '';
 
     this.apiService.deactivateDevice(id).subscribe({
       next: () => {
@@ -78,5 +127,22 @@ export class DevicesComponent implements OnInit {
         this.error = getErrorMessage(error);
       },
     });
+  }
+
+  statusClass(status: string) {
+    if (status === 'activo') return 'success';
+
+    if (status === 'inactivo') return 'danger';
+
+    return 'warning';
+  }
+
+  private getEmptyForm() {
+    return {
+      deviceId: '',
+      name: '',
+      location: '',
+      apiKey: '',
+    };
   }
 }

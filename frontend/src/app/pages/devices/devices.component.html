@@ -1,45 +1,32 @@
-<section class="page">
-  <div class="page-header">
+<section class="page devices-page">
+  <div class="page-top">
     <div>
       <h2>Dispositivos</h2>
       <p>Registra ESP32 autorizados para entrada y salida.</p>
     </div>
 
-    <button class="btn btn-secondary" type="button" (click)="loadDevices()">Actualizar</button>
+    <div class="page-actions">
+      <button class="btn btn-primary" type="button" (click)="openCreate()">
+        Registrar dispositivo
+      </button>
+
+      <button class="btn btn-light" type="button" (click)="loadDevices()">
+        Actualizar
+      </button>
+    </div>
   </div>
 
   <div *ngIf="error" class="alert error">{{ error }}</div>
   <div *ngIf="success" class="alert success">{{ success }}</div>
 
-  <article class="card">
-    <form class="form-grid" (ngSubmit)="createDevice()">
-      <div class="field">
-        <label>Device ID</label>
-        <input name="deviceId" [(ngModel)]="form.deviceId" required />
+  <article class="card table-card">
+    <div class="section-head">
+      <div>
+        <h3>Listado de dispositivos</h3>
+        <span>{{ devices.length }} registro(s)</span>
       </div>
+    </div>
 
-      <div class="field">
-        <label>Nombre</label>
-        <input name="name" [(ngModel)]="form.name" required />
-      </div>
-
-      <div class="field">
-        <label>Ubicación</label>
-        <input name="location" [(ngModel)]="form.location" />
-      </div>
-
-      <div class="field">
-        <label>API key</label>
-        <input name="apiKey" [(ngModel)]="form.apiKey" required />
-      </div>
-
-      <button class="btn btn-primary" type="submit" [disabled]="saving">
-        {{ saving ? 'Guardando...' : 'Registrar dispositivo' }}
-      </button>
-    </form>
-  </article>
-
-  <article class="card">
     <div class="table-wrap" *ngIf="devices.length; else emptyDevices">
       <table>
         <thead>
@@ -49,24 +36,32 @@
             <th>Nombre</th>
             <th>Ubicación</th>
             <th>Estado</th>
-            <th>API key</th>
+            <th>Api Key</th>
             <th>Acción</th>
           </tr>
         </thead>
+
         <tbody>
           <tr *ngFor="let device of devices">
-            <td>{{ device.id }}</td>
+            <td>#{{ device.id }}</td>
             <td>{{ device.deviceId }}</td>
             <td>{{ device.name }}</td>
             <td>{{ device.location || 'Sin ubicación' }}</td>
             <td>
-              <span class="badge" [ngClass]="device.status === 'activo' ? 'success' : 'danger'">
+              <span class="badge" [ngClass]="statusClass(device.status)">
                 {{ device.status }}
               </span>
             </td>
             <td>{{ device.apiKey }}</td>
             <td>
-              <button class="btn btn-danger" type="button" (click)="deactivateDevice(device.id)">Desactivar</button>
+              <button
+                class="btn btn-danger"
+                type="button"
+                (click)="deactivateDevice(device.id)"
+                [disabled]="device.status !== 'activo'"
+              >
+                Desactivar
+              </button>
             </td>
           </tr>
         </tbody>
@@ -78,3 +73,83 @@
     </ng-template>
   </article>
 </section>
+
+<!-- MODAL REGISTRAR DISPOSITIVO -->
+<div class="modal-backdrop" *ngIf="creating" (click)="cancelCreate()">
+  <div class="modal-card" (click)="$event.stopPropagation()">
+    <div class="modal-header">
+      <div>
+        <h3>Registrar dispositivo</h3>
+        <p>Agrega un ESP32 autorizado para comunicarse con el sistema.</p>
+      </div>
+
+      <button class="modal-close" type="button" (click)="cancelCreate()">
+        ×
+      </button>
+    </div>
+
+    <form class="modal-form" (ngSubmit)="createDevice()">
+      <div class="field">
+        <label>Device ID</label>
+        <input
+          name="deviceId"
+          [(ngModel)]="form.deviceId"
+          required
+          placeholder="ESP32-ENTRADA-01"
+        />
+      </div>
+
+      <div class="field">
+        <label>Nombre</label>
+        <input
+          name="name"
+          [(ngModel)]="form.name"
+          required
+          placeholder="Lector de entrada principal"
+        />
+      </div>
+
+      <div class="field">
+        <label>Ubicación</label>
+        <input
+          name="location"
+          [(ngModel)]="form.location"
+          placeholder="Recepción"
+        />
+      </div>
+
+      <div class="field">
+        <label>Api Key</label>
+        <input
+          name="apiKey"
+          [(ngModel)]="form.apiKey"
+          required
+          placeholder="gym_esp32_1234"
+        />
+      </div>
+
+      <div class="modal-actions">
+        <button
+          class="btn btn-primary"
+          type="submit"
+          [disabled]="
+            saving ||
+            !form.deviceId.trim() ||
+            !form.name.trim() ||
+            !form.apiKey.trim()
+          "
+        >
+          {{ saving ? 'Guardando...' : 'Registrar dispositivo' }}
+        </button>
+
+        <button
+          class="btn btn-outline"
+          type="button"
+          (click)="cancelCreate()"
+        >
+          Cancelar
+        </button>
+      </div>
+    </form>
+  </div>
+</div>

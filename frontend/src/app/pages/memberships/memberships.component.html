@@ -1,23 +1,105 @@
-<section class="page">
-  <div class="page-header">
+<section class="page memberships-page">
+  <div class="page-top">
     <div>
       <h2>Membresías</h2>
       <p>Controla pagos, vigencias y renovaciones de los socios.</p>
     </div>
 
-    <button class="btn btn-secondary" type="button" (click)="loadData()">
-      Actualizar
-    </button>
+    <div class="page-actions">
+      <button
+        class="btn btn-primary"
+        type="button"
+        (click)="openCreate()"
+        [disabled]="!members.length"
+      >
+        Registrar membresía
+      </button>
+
+      <button class="btn btn-light" type="button" (click)="loadData()">
+        Actualizar
+      </button>
+    </div>
   </div>
 
   <div *ngIf="error" class="alert error">{{ error }}</div>
   <div *ngIf="success" class="alert success">{{ success }}</div>
 
-  <article class="card">
-    <form class="form-grid" (ngSubmit)="createMembership()">
+  <article class="card table-card">
+    <div class="section-head">
+      <div>
+        <h3>Listado de membresías</h3>
+        <span>{{ memberships.length }} registro(s)</span>
+      </div>
+    </div>
+
+    <div class="table-wrap" *ngIf="memberships.length; else emptyMemberships">
+      <table>
+        <thead>
+          <tr>
+            <th>ID</th>
+            <th>Socio</th>
+            <th>Tipo</th>
+            <th>Inicio</th>
+            <th>Fin</th>
+            <th>Precio</th>
+            <th>Membresía</th>
+            <th>Acción</th>
+          </tr>
+        </thead>
+
+        <tbody>
+          <tr *ngFor="let membership of memberships">
+            <td>#{{ membership.id }}</td>
+            <td>{{ membership.member?.fullName || membership.memberId }}</td>
+            <td>{{ membership.type }}</td>
+            <td>{{ membership.startDate }}</td>
+            <td>{{ membership.endDate }}</td>
+            <td>{{ membership.price | currency:'MXN':'symbol':'1.0-0' }}</td>
+            <td>
+              <span class="badge" [ngClass]="statusClass(membership.status)">
+                {{ membership.status }}
+              </span>
+            </td>
+            <td>
+              <button
+                class="btn btn-danger"
+                type="button"
+                (click)="cancelMembership(membership.id)"
+                [disabled]="membership.status !== 'activa'"
+              >
+                Cancelar
+              </button>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <ng-template #emptyMemberships>
+      <div class="empty">No hay membresías registradas.</div>
+    </ng-template>
+  </article>
+</section>
+
+<!-- MODAL REGISTRAR MEMBRESÍA -->
+<div class="modal-backdrop" *ngIf="creating" (click)="cancelCreate()">
+  <div class="modal-card" (click)="$event.stopPropagation()">
+    <div class="modal-header">
+      <div>
+        <h3>Registrar membresía</h3>
+        <p>Asigna una nueva vigencia a un socio del gimnasio.</p>
+      </div>
+
+      <button class="modal-close" type="button" (click)="cancelCreate()">
+        ×
+      </button>
+    </div>
+
+    <form class="modal-form" (ngSubmit)="createMembership()">
       <div class="field">
         <label>Socio</label>
         <select name="memberId" [(ngModel)]="form.memberId" required>
+          <option [ngValue]="0" disabled>Selecciona un socio</option>
           <option *ngFor="let member of members" [ngValue]="member.id">
             {{ member.id }} - {{ member.fullName }}
           </option>
@@ -39,25 +121,27 @@
         </select>
       </div>
 
-      <div class="field">
-        <label>Inicio</label>
-        <input
-          type="date"
-          name="startDate"
-          [(ngModel)]="form.startDate"
-          (ngModelChange)="onStartDateChange()"
-          required
-        />
-      </div>
+      <div class="modal-grid">
+        <div class="field">
+          <label>Inicio</label>
+          <input
+            type="date"
+            name="startDate"
+            [(ngModel)]="form.startDate"
+            (ngModelChange)="onStartDateChange()"
+            required
+          />
+        </div>
 
-      <div class="field">
-        <label>Fin</label>
-        <input
-          type="date"
-          name="endDate"
-          [(ngModel)]="form.endDate"
-          required
-        />
+        <div class="field">
+          <label>Fin</label>
+          <input
+            type="date"
+            name="endDate"
+            [(ngModel)]="form.endDate"
+            required
+          />
+        </div>
       </div>
 
       <div class="field">
@@ -70,61 +154,23 @@
         />
       </div>
 
-      <button
-        class="btn btn-primary"
-        type="submit"
-        [disabled]="saving || !members.length"
-      >
-        {{ saving ? 'Guardando...' : 'Registrar membresía' }}
-      </button>
+      <div class="modal-actions">
+        <button
+          class="btn btn-primary"
+          type="submit"
+          [disabled]="saving || !form.memberId"
+        >
+          {{ saving ? 'Guardando...' : 'Registrar membresía' }}
+        </button>
+
+        <button
+          class="btn btn-outline"
+          type="button"
+          (click)="cancelCreate()"
+        >
+          Cancelar
+        </button>
+      </div>
     </form>
-  </article>
-
-  <article class="card">
-    <div class="table-wrap" *ngIf="memberships.length; else emptyMemberships">
-      <table>
-        <thead>
-          <tr>
-            <th>ID</th>
-            <th>Socio</th>
-            <th>Tipo</th>
-            <th>Inicio</th>
-            <th>Fin</th>
-            <th>Precio</th>
-            <th>Membresía</th>
-            <th>Acción</th>
-          </tr>
-        </thead>
-
-        <tbody>
-          <tr *ngFor="let membership of memberships">
-            <td>{{ membership.id }}</td>
-            <td>{{ membership.member?.fullName || membership.memberId }}</td>
-            <td>{{ membership.type }}</td>
-            <td>{{ membership.startDate }}</td>
-            <td>{{ membership.endDate }}</td>
-            <td>{{ membership.price | currency:'MXN':'symbol':'1.0-0' }}</td>
-            <td>
-              <span class="badge" [ngClass]="statusClass(membership.status)">
-                {{ membership.status }}
-              </span>
-            </td>
-            <td>
-              <button
-                class="btn btn-danger"
-                type="button"
-                (click)="cancelMembership(membership.id)"
-              >
-                Cancelar
-              </button>
-            </td>
-          </tr>
-        </tbody>
-      </table>
-    </div>
-
-    <ng-template #emptyMemberships>
-      <div class="empty">No hay membresías registradas.</div>
-    </ng-template>
-  </article>
-</section>
+  </div>
+</div>
