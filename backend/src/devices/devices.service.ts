@@ -63,6 +63,14 @@ export class DevicesService {
     return device;
   }
 
+  async findByDeviceId(deviceId: string) {
+    return this.deviceRepository.findOne({
+      where: {
+        deviceId,
+      },
+    });
+  }
+
   async deactivate(id: number) {
     const device = await this.findOne(id);
 

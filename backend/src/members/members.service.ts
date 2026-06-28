@@ -5,10 +5,11 @@ import {
   NotFoundException,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
+import { Not, Repository } from 'typeorm';
 
 import { Member } from './member.entity';
 import { CreateMemberDto } from './dto/create-member.dto';
+import { UpdateMemberDto } from './dto/update-member.dto';
 
 @Injectable()
 export class MembersService {
@@ -59,9 +60,9 @@ export class MembersService {
     end.setMonth(end.getMonth() + 1);
 
     const member = this.memberRepository.create({
-      fullName: fullName,
-      phone: phone,
-      email: email,
+      fullName,
+      phone,
+      email,
       status: 'pendiente_huella',
       membershipStart: data.membershipStart || today,
       membershipEnd:
@@ -89,5 +90,68 @@ export class MembersService {
     }
 
     return member;
+  }
+
+  async update(id: number, data: UpdateMemberDto) {
+    const member = await this.findOne(id);
+
+    const fullName = data.fullName?.trim();
+    const phone = data.phone?.trim();
+    const email = data.email?.trim().toLowerCase();
+
+    if (data.fullName !== undefined && !fullName) {
+      throw new BadRequestException(
+        'El nombre completo no puede estar vacío',
+      );
+    }
+
+    if (email) {
+      const existingEmail = await this.memberRepository.findOne({
+        where: {
+          email,
+          id: Not(id),
+        },
+      });
+
+      if (existingEmail) {
+        throw new ConflictException(
+          'Ya existe otro socio con ese email',
+        );
+      }
+    }
+
+    if (phone) {
+      const existingPhone = await this.memberRepository.findOne({
+        where: {
+          phone,
+          id: Not(id),
+        },
+      });
+
+      if (existingPhone) {
+        throw new ConflictException(
+          'Ya existe otro socio con ese teléfono',
+        );
+      }
+    }
+
+    if (fullName !== undefined) {
+      member.fullName = fullName;
+    }
+
+    if (phone !== undefined) {
+      member.phone = phone;
+    }
+
+    if (email !== undefined) {
+      member.email = email;
+    }
+
+    const savedMember = await this.memberRepository.save(member);
+
+    return {
+      message: 'Socio actualizado correctamente',
+      member: savedMember,
+    };
   }
 }

@@ -19,10 +19,18 @@ export class MembersComponent implements OnInit {
   members: Member[] = [];
   loading = false;
   saving = false;
+  editing = false;
   error = '';
   success = '';
 
   form = this.getEmptyForm();
+
+  editForm = {
+    id: 0,
+    fullName: '',
+    phone: '',
+    email: '',
+  };
 
   ngOnInit() {
     this.loadMembers();
@@ -78,6 +86,67 @@ export class MembersComponent implements OnInit {
     });
   }
 
+  openEdit(member: Member) {
+    this.error = '';
+    this.success = '';
+    this.editing = true;
+
+    this.editForm = {
+      id: member.id,
+      fullName: member.fullName,
+      phone: member.phone || '',
+      email: member.email || '',
+    };
+  }
+
+  cancelEdit() {
+    this.editing = false;
+
+    this.editForm = {
+      id: 0,
+      fullName: '',
+      phone: '',
+      email: '',
+    };
+  }
+
+  updateMember() {
+    this.error = '';
+    this.success = '';
+
+    const id = this.editForm.id;
+    const fullName = this.editForm.fullName.trim();
+    const phone = this.editForm.phone.trim();
+    const email = this.editForm.email.trim();
+
+    if (!fullName) {
+      this.error = 'El nombre completo es obligatorio.';
+      return;
+    }
+
+    this.saving = true;
+
+    const data = {
+      fullName,
+      phone,
+      email,
+    };
+
+    this.cancelEdit();
+
+    this.apiService.updateMember(id, data).subscribe({
+      next: () => {
+        this.success = 'Socio actualizado correctamente.';
+        this.saving = false;
+        this.loadMembers();
+      },
+      error: (error) => {
+        this.error = getErrorMessage(error);
+        this.saving = false;
+      },
+    });
+  }
+
   statusClass(status: string) {
     if (status === 'activo') return 'success';
 
@@ -94,6 +163,7 @@ export class MembersComponent implements OnInit {
 
   private getEmptyForm() {
     const today = new Date().toISOString().slice(0, 10);
+
     const end = new Date();
     end.setMonth(end.getMonth() + 1);
 

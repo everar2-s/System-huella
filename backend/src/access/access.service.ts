@@ -36,140 +36,196 @@ export class AccessService {
       };
     }
 
-    try {
-      const device = await this.devicesService.findByDeviceId(deviceId);
+    const device = await this.devicesService.findByDeviceId(deviceId);
 
-      if (device.status !== 'activo') {
-        return {
-          valid: false,
-          message: 'Dispositivo inactivo',
-        };
-      }
-
-      if (device.apiKey !== apiKey) {
-        return {
-          valid: false,
-          message: 'apiKey inválida',
-        };
-      }
-
-      return {
-        valid: true,
-        message: 'Dispositivo autorizado',
-      };
-    } catch {
+    if (!device) {
       return {
         valid: false,
         message: 'Dispositivo no registrado',
       };
     }
+
+    if (device.status !== 'activo') {
+      return {
+        valid: false,
+        message: 'Dispositivo inactivo',
+      };
+    }
+
+    if (device.apiKey !== apiKey) {
+      return {
+        valid: false,
+        message: 'apiKey inválida',
+      };
+    }
+
+    return {
+      valid: true,
+      message: 'Dispositivo autorizado',
+    };
   }
 
   async checkIn(data: {
-  fingerprintId: number;
-  deviceId?: string;
-  apiKey?: string;
-}) {
-  const deviceValidation = await this.validateDevice(
-    data.deviceId,
-    data.apiKey,
-  );
+    fingerprintId: number;
+    deviceId?: string;
+    apiKey?: string;
+  }) {
+    const deviceValidation = await this.validateDevice(
+      data.deviceId,
+      data.apiKey,
+    );
 
-  if (!deviceValidation.valid) {
-    await this.attendanceService.create({
-      fingerprintId: data.fingerprintId,
-      deviceId: data.deviceId,
-      type: 'entrada',
-      accessGranted: false,
-      message: deviceValidation.message,
+    if (!deviceValidation.valid) {
+      await this.attendanceService.create({
+        fingerprintId: data.fingerprintId,
+        deviceId: data.deviceId,
+        type: 'entrada',
+        accessGranted: false,
+        message: deviceValidation.message,
+      });
+
+      return {
+        access: false,
+        message: deviceValidation.message,
+      };
+    }
+
+    const fingerprint = await this.fingerprintRepository.findOne({
+      where: {
+        fingerprintId: data.fingerprintId,
+        active: true,
+      },
+      relations: {
+        member: true,
+      },
     });
 
-    return {
-      access: false,
-      message: deviceValidation.message,
-    };
-  }
+    if (!fingerprint) {
+      await this.attendanceService.create({
+        fingerprintId: data.fingerprintId,
+        deviceId: data.deviceId,
+        type: 'entrada',
+        accessGranted: false,
+        message: 'Huella no registrada o inactiva',
+      });
 
-  const fingerprint = await this.fingerprintRepository.findOne({
-    where: {
-      fingerprintId: data.fingerprintId,
-      active: true,
-    },
-    relations: {
-      member: true,
-    },
-  });
+      return {
+        access: false,
+        message: 'Huella no registrada o inactiva',
+      };
+    }
 
-  if (!fingerprint) {
-    await this.attendanceService.create({
-      fingerprintId: data.fingerprintId,
-      deviceId: data.deviceId,
-      type: 'entrada',
-      accessGranted: false,
-      message: 'Huella no registrada',
-    });
+    const member = fingerprint.member;
 
-    return {
-      access: false,
-      message: 'Huella no registrada',
-    };
-  }
+    if (!member) {
+      await this.attendanceService.create({
+        fingerprintId: data.fingerprintId,
+        deviceId: data.deviceId,
+        type: 'entrada',
+        accessGranted: false,
+        message: 'La huella no está vinculada a ningún socio',
+      });
 
-  const member = fingerprint.member;
+      return {
+        access: false,
+        message: 'La huella no está vinculada a ningún socio',
+      };
+    }
 
-  if (!member) {
-    await this.attendanceService.create({
-      fingerprintId: data.fingerprintId,
-      deviceId: data.deviceId,
-      type: 'entrada',
-      accessGranted: false,
-      message: 'La huella no está vinculada a ningún socio',
-    });
+    if (member.status === 'suspendido') {
+      await this.attendanceService.create({
+        member,
+        fingerprintId: data.fingerprintId,
+        deviceId: data.deviceId,
+        type: 'entrada',
+        accessGranted: false,
+        message: 'Socio suspendido',
+      });
 
-    return {
-      access: false,
-      message: 'La huella no está vinculada a ningún socio',
-    };
-  }
+      return {
+        access: false,
+        message: 'Socio suspendido',
+        member,
+      };
+    }
 
-  if (member.status === 'suspendido') {
-    await this.attendanceService.create({
-      member,
-      fingerprintId: data.fingerprintId,
-      deviceId: data.deviceId,
-      type: 'entrada',
-      accessGranted: false,
-      message: 'Socio suspendido',
-    });
+    if (member.status === 'inactivo') {
+      await this.attendanceService.create({
+        member,
+        fingerprintId: data.fingerprintId,
+        deviceId: data.deviceId,
+        type: 'entrada',
+        accessGranted: false,
+        message: 'Socio inactivo',
+      });
 
-    return {
-      access: false,
-      message: 'Socio suspendido',
-      member,
-    };
-  }
+      return {
+        access: false,
+        message: 'Socio inactivo',
+        member,
+      };
+    }
 
-  if (member.status === 'inactivo') {
-    await this.attendanceService.create({
-      member,
-      fingerprintId: data.fingerprintId,
-      deviceId: data.deviceId,
-      type: 'entrada',
-      accessGranted: false,
-      message: 'Socio inactivo',
-    });
+    const today = new Date().toISOString().split('T')[0];
 
-    return {
-      access: false,
-      message: 'Socio inactivo',
-      member,
-    };
-  }
+    if (member.membershipEnd < today) {
+      member.status = 'vencido';
+      await this.memberRepository.save(member);
 
-  const today = new Date().toISOString().split('T')[0];
+      fingerprint.active = false;
+      await this.fingerprintRepository.save(fingerprint);
 
-  if (member.membershipEnd < today) {
-    member.status = 'vencido';
+      await this.attendanceService.create({
+        member,
+        fingerprintId: data.fingerprintId,
+        deviceId: data.deviceId,
+        type: 'entrada',
+        accessGranted: false,
+        message: 'Membresía vencida. Huella desactivada',
+      });
+
+      return {
+        access: false,
+        message: 'Membresía vencida. Huella desactivada',
+        member: {
+          id: member.id,
+          fullName: member.fullName,
+          status: member.status,
+          membershipStart: member.membershipStart,
+          membershipEnd: member.membershipEnd,
+        },
+        deviceId: data.deviceId ?? null,
+        type: 'entrada',
+      };
+    }
+
+    const lastLog =
+      await this.attendanceService.findLastSuccessfulByMember(member.id);
+
+    if (lastLog && lastLog.type === 'entrada') {
+      await this.attendanceService.create({
+        member,
+        fingerprintId: data.fingerprintId,
+        deviceId: data.deviceId,
+        type: 'entrada',
+        accessGranted: false,
+        message: 'Ya tienes una entrada activa',
+      });
+
+      return {
+        access: false,
+        message: 'Ya tienes una entrada activa',
+        member: {
+          id: member.id,
+          fullName: member.fullName,
+          status: member.status,
+        },
+        deviceId: data.deviceId ?? null,
+        type: 'entrada',
+      };
+    }
+
+    member.status = 'activo';
     await this.memberRepository.save(member);
 
     await this.attendanceService.create({
@@ -177,155 +233,132 @@ export class AccessService {
       fingerprintId: data.fingerprintId,
       deviceId: data.deviceId,
       type: 'entrada',
-      accessGranted: false,
-      message: 'Membresía vencida',
+      accessGranted: true,
+      message: 'Acceso permitido',
     });
 
     return {
-      access: false,
-      message: 'Membresía vencida',
-      member,
-    };
-  }
-
-  // Validar que no marque entrada dos veces seguidas
-  const lastLog =
-    await this.attendanceService.findLastSuccessfulByMember(member.id);
-
-  if (lastLog && lastLog.type === 'entrada') {
-    await this.attendanceService.create({
-      member,
-      fingerprintId: data.fingerprintId,
-      deviceId: data.deviceId,
-      type: 'entrada',
-      accessGranted: false,
-      message: 'Ya tienes una entrada activa',
-    });
-
-    return {
-      access: false,
-      message: 'Ya tienes una entrada activa',
+      access: true,
+      message: 'Acceso permitido',
       member: {
         id: member.id,
         fullName: member.fullName,
+        phone: member.phone,
+        email: member.email,
         status: member.status,
+        membershipStart: member.membershipStart,
+        membershipEnd: member.membershipEnd,
       },
       deviceId: data.deviceId ?? null,
       type: 'entrada',
     };
   }
 
-  member.status = 'activo';
-  await this.memberRepository.save(member);
+  async checkOut(data: {
+    fingerprintId: number;
+    deviceId?: string;
+    apiKey?: string;
+  }) {
+    const deviceValidation = await this.validateDevice(
+      data.deviceId,
+      data.apiKey,
+    );
 
-  await this.attendanceService.create({
-    member,
-    fingerprintId: data.fingerprintId,
-    deviceId: data.deviceId,
-    type: 'entrada',
-    accessGranted: true,
-    message: 'Acceso permitido',
-  });
+    if (!deviceValidation.valid) {
+      await this.attendanceService.create({
+        fingerprintId: data.fingerprintId,
+        deviceId: data.deviceId,
+        type: 'salida',
+        accessGranted: false,
+        message: deviceValidation.message,
+      });
 
-  return {
-    access: true,
-    message: 'Acceso permitido',
-    member: {
-      id: member.id,
-      fullName: member.fullName,
-      phone: member.phone,
-      email: member.email,
-      status: member.status,
-      membershipStart: member.membershipStart,
-      membershipEnd: member.membershipEnd,
-    },
-    deviceId: data.deviceId ?? null,
-    type: 'entrada',
-  };
-}
-async checkOut(data: {
-  fingerprintId: number;
-  deviceId?: string;
-  apiKey?: string;
-}) {
-  const deviceValidation = await this.validateDevice(
-    data.deviceId,
-    data.apiKey,
-  );
+      return {
+        access: false,
+        message: deviceValidation.message,
+      };
+    }
 
-  if (!deviceValidation.valid) {
-    await this.attendanceService.create({
-      fingerprintId: data.fingerprintId,
-      deviceId: data.deviceId,
-      type: 'salida',
-      accessGranted: false,
-      message: deviceValidation.message,
+    const fingerprint = await this.fingerprintRepository.findOne({
+      where: {
+        fingerprintId: data.fingerprintId,
+        active: true,
+      },
+      relations: {
+        member: true,
+      },
     });
 
-    return {
-      access: false,
-      message: deviceValidation.message,
-    };
-  }
+    if (!fingerprint) {
+      await this.attendanceService.create({
+        fingerprintId: data.fingerprintId,
+        deviceId: data.deviceId,
+        type: 'salida',
+        accessGranted: false,
+        message: 'Huella no registrada o inactiva',
+      });
 
-  const fingerprint = await this.fingerprintRepository.findOne({
-    where: {
-      fingerprintId: data.fingerprintId,
-      active: true,
-    },
-    relations: {
-      member: true,
-    },
-  });
+      return {
+        access: false,
+        message: 'Huella no registrada o inactiva',
+      };
+    }
 
-  if (!fingerprint) {
-    await this.attendanceService.create({
-      fingerprintId: data.fingerprintId,
-      deviceId: data.deviceId,
-      type: 'salida',
-      accessGranted: false,
-      message: 'Huella no registrada',
-    });
+    const member = fingerprint.member;
 
-    return {
-      access: false,
-      message: 'Huella no registrada',
-    };
-  }
+    if (!member) {
+      await this.attendanceService.create({
+        fingerprintId: data.fingerprintId,
+        deviceId: data.deviceId,
+        type: 'salida',
+        accessGranted: false,
+        message: 'La huella no está vinculada a ningún socio',
+      });
 
-  const member = fingerprint.member;
+      return {
+        access: false,
+        message: 'La huella no está vinculada a ningún socio',
+      };
+    }
 
-  if (!member) {
-    await this.attendanceService.create({
-      fingerprintId: data.fingerprintId,
-      deviceId: data.deviceId,
-      type: 'salida',
-      accessGranted: false,
-      message: 'La huella no está vinculada a ningún socio',
-    });
+    const lastLog =
+      await this.attendanceService.findLastSuccessfulByMember(member.id);
 
-    return {
-      access: false,
-      message: 'La huella no está vinculada a ningún socio',
-    };
-  }
+    if (!lastLog || lastLog.type !== 'entrada') {
+      await this.attendanceService.create({
+        member,
+        fingerprintId: data.fingerprintId,
+        deviceId: data.deviceId,
+        type: 'salida',
+        accessGranted: false,
+        message: 'No puedes marcar salida sin una entrada activa',
+      });
 
-  const lastLog =
-    await this.attendanceService.findLastSuccessfulByMember(member.id);
+      return {
+        access: false,
+        message: 'No puedes marcar salida sin una entrada activa',
+        member: {
+          id: member.id,
+          fullName: member.fullName,
+          status: member.status,
+        },
+        deviceId: data.deviceId ?? null,
+        type: 'salida',
+      };
+    }
 
-  if (!lastLog || lastLog.type !== 'entrada') {
     await this.attendanceService.create({
       member,
       fingerprintId: data.fingerprintId,
       deviceId: data.deviceId,
       type: 'salida',
-      accessGranted: false,
-      message: 'No puedes marcar salida sin una entrada activa',
+      accessGranted: true,
+      message: 'Salida registrada',
     });
 
     return {
-      access: false,
-      message: 'No puedes marcar salida sin una entrada activa',
+      access: true,
+      message: 'Salida registrada',
       member: {
         id: member.id,
         fullName: member.fullName,
@@ -335,26 +368,4 @@ async checkOut(data: {
       type: 'salida',
     };
   }
-
-  await this.attendanceService.create({
-    member,
-    fingerprintId: data.fingerprintId,
-    deviceId: data.deviceId,
-    type: 'salida',
-    accessGranted: true,
-    message: 'Salida registrada',
-  });
-
-  return {
-    access: true,
-    message: 'Salida registrada',
-    member: {
-      id: member.id,
-      fullName: member.fullName,
-      status: member.status,
-    },
-    deviceId: data.deviceId ?? null,
-    type: 'salida',
-  };
 }
-  }

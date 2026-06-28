@@ -15,6 +15,16 @@ export class ApiService {
   private readonly http = inject(HttpClient);
   private readonly baseUrl = environment.apiUrl;
 
+updateMember(
+  id: number,
+  data: {
+    fullName?: string;
+    phone?: string;
+    email?: string;
+  },
+) {
+  return this.http.patch(`${this.baseUrl}/members/${id}`, data);
+}
   getMembers() {
     return this.http.get<Member[]>(`${this.baseUrl}/members`);
   }
