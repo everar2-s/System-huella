@@ -145,6 +145,21 @@
   background: #f8fafc;
 }
 
+.btn-table {
+  height: 38px;
+  padding: 0 14px;
+  border-radius: 10px;
+  background: #eef7f3;
+  color: #1f7a5a;
+  border: 1px solid #cae6da;
+  font-size: 0.88rem;
+  font-weight: 600;
+}
+
+.btn-table:hover:not(:disabled) {
+  background: #e5f3ed;
+}
+
 .btn-danger {
   height: 38px;
   padding: 0 14px;
@@ -158,6 +173,12 @@
 
 .btn-danger:hover:not(:disabled) {
   background: #fee2e2;
+}
+
+.table-actions {
+  display: flex;
+  gap: 10px;
+  align-items: center;
 }
 
 .table-wrap {
@@ -373,6 +394,15 @@ tbody tr:hover {
     padding: 14px 12px;
   }
 
+  .table-actions {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .table-actions .btn {
+    width: 100%;
+  }
+
   .modal-backdrop {
     padding: 16px;
   }
@@ -394,37 +424,6 @@ tbody tr:hover {
   }
 
   .modal-actions .btn {
-    width: 100%;
-  }
-}
-.table-actions {
-  display: flex;
-  gap: 10px;
-  align-items: center;
-}
-
-.btn-table {
-  height: 38px;
-  padding: 0 14px;
-  border-radius: 10px;
-  background: #eef7f3;
-  color: #1f7a5a;
-  border: 1px solid #cae6da;
-  font-size: 0.88rem;
-  font-weight: 600;
-}
-
-.btn-table:hover:not(:disabled) {
-  background: #e5f3ed;
-}
-
-@media (max-width: 720px) {
-  .table-actions {
-    flex-direction: column;
-    align-items: stretch;
-  }
-
-  .table-actions .btn {
     width: 100%;
   }
 }

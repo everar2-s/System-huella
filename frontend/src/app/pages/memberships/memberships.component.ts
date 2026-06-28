@@ -55,12 +55,23 @@ export class MembershipsComponent implements OnInit {
   }
 
   get availableMembers() {
-    const activeMemberIds = this.memberships
-      .filter((membership) => membership.status === 'activa')
+    const unavailableMemberIds = this.memberships
+      .filter(
+        (membership) =>
+          membership.status === 'activa' ||
+          membership.status === 'suspendida',
+      )
       .map((membership) => membership.memberId);
 
     return this.members.filter(
-      (member) => !activeMemberIds.includes(member.id),
+      (member) => !unavailableMemberIds.includes(member.id),
+    );
+  }
+
+  canRenew(membership: Membership) {
+    return (
+      membership.status === 'activa' ||
+      membership.status === 'suspendida'
     );
   }
 
@@ -71,7 +82,7 @@ export class MembershipsComponent implements OnInit {
 
     if (!this.availableMembers.length) {
       this.error =
-        'No hay socios disponibles. Todos tienen una membresía activa.';
+        'No hay socios disponibles. Todos tienen una membresía activa o suspendida.';
       return;
     }
 
@@ -191,6 +202,8 @@ export class MembershipsComponent implements OnInit {
 
   statusClass(status: string) {
     if (status === 'activa') return 'success';
+
+    if (status === 'suspendida') return 'warning';
 
     if (status === 'vencida' || status === 'cancelada') {
       return 'danger';

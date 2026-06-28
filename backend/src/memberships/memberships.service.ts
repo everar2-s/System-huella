@@ -5,7 +5,7 @@ import {
   NotFoundException,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { LessThan, Repository } from 'typeorm';
+import { In, LessThan, Repository } from 'typeorm';
 import { Cron, CronExpression } from '@nestjs/schedule';
 
 import { Membership } from './membership.entity';
@@ -37,16 +37,16 @@ export class MembershipsService {
       throw new NotFoundException('El socio no existe');
     }
 
-    const activeMembership = await this.membershipRepository.findOne({
+    const currentMembership = await this.membershipRepository.findOne({
       where: {
         memberId: data.memberId,
-        status: 'activa',
+        status: In(['activa', 'suspendida']),
       },
     });
 
-    if (activeMembership) {
+    if (currentMembership) {
       throw new ConflictException(
-        'Este socio ya tiene una membresía activa. Usa renovar.',
+        'Este socio ya tiene una membresía activa o suspendida. Usa renovar.',
       );
     }
 
@@ -64,20 +64,20 @@ export class MembershipsService {
       throw new NotFoundException('El socio no existe');
     }
 
-    const activeMemberships = await this.membershipRepository.find({
+    const currentMemberships = await this.membershipRepository.find({
       where: {
         memberId: data.memberId,
-        status: 'activa',
+        status: In(['activa', 'suspendida']),
       },
     });
 
-    if (!activeMemberships.length) {
+    if (!currentMemberships.length) {
       throw new NotFoundException(
-        'Este socio no tiene una membresía activa para renovar',
+        'Este socio no tiene una membresía activa o suspendida para renovar',
       );
     }
 
-    for (const membership of activeMemberships) {
+    for (const membership of currentMemberships) {
       membership.status = 'cancelada';
       await this.membershipRepository.save(membership);
     }
@@ -86,12 +86,14 @@ export class MembershipsService {
 
     return {
       message: 'Membresía renovada correctamente',
-      previousMembershipsCancelled: activeMemberships.length,
+      previousMembershipsCancelled: currentMemberships.length,
       membership: newMembership,
     };
   }
 
-  findAll() {
+  async findAll() {
+    await this.expireExpiredMemberships();
+
     return this.membershipRepository.find({
       relations: {
         member: true,
@@ -162,22 +164,17 @@ export class MembershipsService {
     });
 
     for (const membership of expiredMemberships) {
-      membership.status = 'vencida';
+      membership.status = 'suspendida';
       await this.membershipRepository.save(membership);
 
       if (membership.member) {
-        membership.member.status = 'vencido';
+        membership.member.status = 'suspendido';
         await this.memberRepository.save(membership.member);
-
-        await this.fingerprintRepository.update(
-          { memberId: membership.member.id },
-          { active: false },
-        );
       }
     }
 
     return {
-      message: 'Membresías vencidas actualizadas',
+      message: 'Membresías suspendidas por vencimiento actualizadas',
       total: expiredMemberships.length,
     };
   }

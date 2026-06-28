@@ -22,9 +22,9 @@ export class Membership {
 
   @Column({ type: 'date' })
   startDate?: string;
-
-  @Column({ type: 'date' })
-  endDate?: string;
+ 
+@Column({ type: 'date' })
+endDate!: string;
 
   @Column({ default: 'activa' })
   status!: string; // activa, vencida, cancelada

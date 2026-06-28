@@ -4,6 +4,7 @@ import { Repository } from 'typeorm';
 
 import { Fingerprint } from '../fingerprints/fingerprint.entity';
 import { Member } from '../members/member.entity';
+import { Membership } from '../memberships/membership.entity';
 import { AttendanceService } from '../attendance/attendance.service';
 import { DevicesService } from '../devices/devices.service';
 
@@ -15,6 +16,9 @@ export class AccessService {
 
     @InjectRepository(Member)
     private readonly memberRepository: Repository<Member>,
+
+    @InjectRepository(Membership)
+    private readonly membershipRepository: Repository<Membership>,
 
     private readonly attendanceService: AttendanceService,
 
@@ -65,6 +69,62 @@ export class AccessService {
     };
   }
 
+  private async validateMembershipForAccess(member: Member) {
+    const today = new Date().toISOString().split('T')[0];
+
+    const activeMembership = await this.membershipRepository.findOne({
+      where: {
+        memberId: member.id,
+        status: 'activa',
+      },
+      order: {
+        id: 'DESC',
+      },
+    });
+
+    if (activeMembership === null) {
+      const suspendedMembership = await this.membershipRepository.findOne({
+        where: {
+          memberId: member.id,
+          status: 'suspendida',
+        },
+        order: {
+          id: 'DESC',
+        },
+      });
+
+      if (suspendedMembership) {
+        member.status = 'suspendido';
+        await this.memberRepository.save(member);
+      }
+
+      return {
+        valid: false,
+        message: 'Necesitas renovar tu membresía para acceder',
+      };
+    }
+
+    const membershipEndDate = activeMembership.endDate;
+
+    if (membershipEndDate < today) {
+      activeMembership.status = 'suspendida';
+      await this.membershipRepository.save(activeMembership);
+
+      member.status = 'suspendido';
+      await this.memberRepository.save(member);
+
+      return {
+        valid: false,
+        message: 'Necesitas renovar tu membresía para acceder',
+      };
+    }
+
+    return {
+      valid: true,
+      message: 'Membresía vigente',
+    };
+  }
+
   async checkIn(data: {
     fingerprintId: number;
     deviceId?: string;
@@ -93,7 +153,6 @@ export class AccessService {
     const fingerprint = await this.fingerprintRepository.findOne({
       where: {
         fingerprintId: data.fingerprintId,
-        active: true,
       },
       relations: {
         member: true,
@@ -106,12 +165,12 @@ export class AccessService {
         deviceId: data.deviceId,
         type: 'entrada',
         accessGranted: false,
-        message: 'Huella no registrada o inactiva',
+        message: 'Huella no registrada',
       });
 
       return {
         access: false,
-        message: 'Huella no registrada o inactiva',
+        message: 'Huella no registrada',
       };
     }
 
@@ -129,6 +188,34 @@ export class AccessService {
       return {
         access: false,
         message: 'La huella no está vinculada a ningún socio',
+      };
+    }
+
+    const membershipValidation =
+      await this.validateMembershipForAccess(member);
+
+    if (!membershipValidation.valid) {
+      await this.attendanceService.create({
+        member,
+        fingerprintId: data.fingerprintId,
+        deviceId: data.deviceId,
+        type: 'entrada',
+        accessGranted: false,
+        message: membershipValidation.message,
+      });
+
+      return {
+        access: false,
+        message: membershipValidation.message,
+        member: {
+          id: member.id,
+          fullName: member.fullName,
+          status: member.status,
+          membershipStart: member.membershipStart,
+          membershipEnd: member.membershipEnd,
+        },
+        deviceId: data.deviceId ?? null,
+        type: 'entrada',
       };
     }
 
@@ -166,36 +253,19 @@ export class AccessService {
       };
     }
 
-    const today = new Date().toISOString().split('T')[0];
-
-    if (member.membershipEnd < today) {
-      member.status = 'vencido';
-      await this.memberRepository.save(member);
-
-      fingerprint.active = false;
-      await this.fingerprintRepository.save(fingerprint);
-
+    if (!fingerprint.active) {
       await this.attendanceService.create({
         member,
         fingerprintId: data.fingerprintId,
         deviceId: data.deviceId,
         type: 'entrada',
         accessGranted: false,
-        message: 'Membresía vencida. Huella desactivada',
+        message: 'Huella inactiva',
       });
 
       return {
         access: false,
-        message: 'Membresía vencida. Huella desactivada',
-        member: {
-          id: member.id,
-          fullName: member.fullName,
-          status: member.status,
-          membershipStart: member.membershipStart,
-          membershipEnd: member.membershipEnd,
-        },
-        deviceId: data.deviceId ?? null,
-        type: 'entrada',
+        message: 'Huella inactiva',
       };
     }
 
@@ -282,7 +352,6 @@ export class AccessService {
     const fingerprint = await this.fingerprintRepository.findOne({
       where: {
         fingerprintId: data.fingerprintId,
-        active: true,
       },
       relations: {
         member: true,
@@ -295,12 +364,12 @@ export class AccessService {
         deviceId: data.deviceId,
         type: 'salida',
         accessGranted: false,
-        message: 'Huella no registrada o inactiva',
+        message: 'Huella no registrada',
       });
 
       return {
         access: false,
-        message: 'Huella no registrada o inactiva',
+        message: 'Huella no registrada',
       };
     }
 
