@@ -2,7 +2,7 @@
   <div class="page-top">
     <div>
       <h2>Dispositivos</h2>
-      <p>Registra ESP32 autorizados para entrada y salida.</p>
+      <p>Registra y administra ESP32 autorizados para entrada y salida.</p>
     </div>
 
     <div class="page-actions">
@@ -19,15 +19,73 @@
   <div *ngIf="error" class="alert error">{{ error }}</div>
   <div *ngIf="success" class="alert success">{{ success }}</div>
 
+  <article class="card filters-card">
+    <div class="section-head">
+      <div>
+        <h3>Filtros</h3>
+       <!--<span>Busca dispositivos por Device ID, nombre, ubicación o estado.</span>-->
+      </div>
+    </div>
+
+    <div class="filters-grid">
+      <div class="field">
+        <label>Device ID</label>
+        <input
+          type="text"
+          name="filterDeviceId"
+          [(ngModel)]="filterDeviceId"
+          placeholder="ESP32-ENTRADA-01"
+        />
+      </div>
+
+      <div class="field">
+        <label>Nombre</label>
+        <input
+          type="text"
+          name="filterName"
+          [(ngModel)]="filterName"
+          placeholder="Nombre del dispositivo"
+        />
+      </div>
+
+      <div class="field">
+        <label>Ubicación</label>
+        <input
+          type="text"
+          name="filterLocation"
+          [(ngModel)]="filterLocation"
+          placeholder="Recepción"
+        />
+      </div>
+
+      <div class="field">
+        <label>Estado</label>
+        <select name="filterStatus" [(ngModel)]="filterStatus">
+          <option value="">Todos</option>
+          <option value="activo">Activo</option>
+          <option value="inactivo">Inactivo</option>
+        </select>
+      </div>
+
+      <div class="filter-actions">
+        <button class="btn btn-outline" type="button" (click)="clearFilters()">
+          Limpiar filtros
+        </button>
+      </div>
+    </div>
+  </article>
+
   <article class="card table-card">
     <div class="section-head">
       <div>
         <h3>Listado de dispositivos</h3>
-        <span>{{ devices.length }} registro(s)</span>
+        <span>
+          {{ filteredDevices.length }} de {{ devices.length }} registro(s)
+        </span>
       </div>
     </div>
 
-    <div class="table-wrap" *ngIf="devices.length; else emptyDevices">
+    <div class="table-wrap" *ngIf="filteredDevices.length; else emptyDevices">
       <table>
         <thead>
           <tr>
@@ -42,7 +100,7 @@
         </thead>
 
         <tbody>
-          <tr *ngFor="let device of devices">
+          <tr *ngFor="let device of filteredDevices">
             <td>#{{ device.id }}</td>
             <td>{{ device.deviceId }}</td>
             <td>{{ device.name }}</td>
@@ -69,12 +127,11 @@
     </div>
 
     <ng-template #emptyDevices>
-      <div class="empty">No hay dispositivos registrados.</div>
+      <div class="empty">No hay dispositivos que coincidan con los filtros.</div>
     </ng-template>
   </article>
 </section>
 
-<!-- MODAL REGISTRAR DISPOSITIVO -->
 <div class="modal-backdrop" *ngIf="creating" (click)="cancelCreate()">
   <div class="modal-card" (click)="$event.stopPropagation()">
     <div class="modal-header">

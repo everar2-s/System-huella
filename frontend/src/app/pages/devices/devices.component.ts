@@ -25,10 +25,46 @@ export class DevicesComponent implements OnInit {
   error = '';
   success = '';
 
+  filterDeviceId = '';
+  filterName = '';
+  filterLocation = '';
+  filterStatus = '';
+
   form = this.getEmptyForm();
 
   ngOnInit() {
     this.loadDevices();
+  }
+
+  get filteredDevices() {
+    const deviceId = this.normalizeText(this.filterDeviceId);
+    const name = this.normalizeText(this.filterName);
+    const location = this.normalizeText(this.filterLocation);
+    const status = this.filterStatus;
+
+    return [...this.devices]
+      .sort((a, b) => a.id - b.id)
+      .filter((device) => {
+        const matchesDeviceId =
+          !deviceId ||
+          this.normalizeText(device.deviceId).includes(deviceId);
+
+        const matchesName =
+          !name || this.normalizeText(device.name).includes(name);
+
+        const matchesLocation =
+          !location ||
+          this.normalizeText(device.location || '').includes(location);
+
+        const matchesStatus = !status || device.status === status;
+
+        return (
+          matchesDeviceId &&
+          matchesName &&
+          matchesLocation &&
+          matchesStatus
+        );
+      });
   }
 
   loadDevices() {
@@ -37,7 +73,7 @@ export class DevicesComponent implements OnInit {
 
     this.apiService.getDevices().subscribe({
       next: (devices) => {
-        this.devices = devices;
+        this.devices = devices.sort((a, b) => a.id - b.id);
         this.loading = false;
       },
       error: (error) => {
@@ -45,6 +81,13 @@ export class DevicesComponent implements OnInit {
         this.loading = false;
       },
     });
+  }
+
+  clearFilters() {
+    this.filterDeviceId = '';
+    this.filterName = '';
+    this.filterLocation = '';
+    this.filterStatus = '';
   }
 
   openCreate() {
@@ -144,5 +187,13 @@ export class DevicesComponent implements OnInit {
       location: '',
       apiKey: '',
     };
+  }
+
+  private normalizeText(value: string) {
+    return value
+      .toLowerCase()
+      .normalize('NFD')
+      .replace(/[\u0300-\u036f]/g, '')
+      .trim();
   }
 }
