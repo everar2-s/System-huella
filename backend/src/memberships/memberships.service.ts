@@ -1,5 +1,6 @@
 import {
   BadRequestException,
+  ConflictException,
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
@@ -41,6 +42,19 @@ export class MembershipsService {
 
     if (!member) {
       throw new NotFoundException('El socio no existe');
+    }
+
+    const activeMembership = await this.membershipRepository.findOne({
+      where: {
+        memberId: data.memberId,
+        status: 'activa',
+      },
+    });
+
+    if (activeMembership) {
+      throw new ConflictException(
+        'Este socio ya tiene una membresía activa',
+      );
     }
 
     const hasFingerprint = await this.fingerprintRepository.findOne({

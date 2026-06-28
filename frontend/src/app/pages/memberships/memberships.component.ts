@@ -44,11 +44,6 @@ export class MembershipsComponent implements OnInit {
       next: ({ members, memberships }) => {
         this.members = members;
         this.memberships = memberships;
-
-        if (this.members.length && !this.form.memberId) {
-          this.form.memberId = this.members[0].id;
-        }
-
         this.loading = false;
       },
       error: (error) => {
@@ -58,15 +53,28 @@ export class MembershipsComponent implements OnInit {
     });
   }
 
+  get availableMembers() {
+    const activeMemberIds = this.memberships
+      .filter((membership) => membership.status === 'activa')
+      .map((membership) => membership.memberId);
+
+    return this.members.filter(
+      (member) => !activeMemberIds.includes(member.id),
+    );
+  }
+
   openCreate() {
     this.error = '';
     this.success = '';
 
-    this.form = this.getEmptyForm();
-
-    if (this.members.length) {
-      this.form.memberId = this.members[0].id;
+    if (!this.availableMembers.length) {
+      this.error =
+        'No hay socios disponibles. Todos tienen una membresía activa.';
+      return;
     }
+
+    this.form = this.getEmptyForm();
+    this.form.memberId = this.availableMembers[0].id;
 
     this.creating = true;
   }
@@ -85,13 +93,26 @@ export class MembershipsComponent implements OnInit {
       return;
     }
 
+    const memberAlreadyHasActiveMembership =
+      this.memberships.some(
+        (membership) =>
+          membership.memberId === Number(this.form.memberId) &&
+          membership.status === 'activa',
+      );
+
+    if (memberAlreadyHasActiveMembership) {
+      this.error = 'Este socio ya tiene una membresía activa.';
+      return;
+    }
+
     if (!this.form.startDate || !this.form.endDate) {
       this.error = 'Las fechas son obligatorias.';
       return;
     }
 
     if (this.form.endDate < this.form.startDate) {
-      this.error = 'La fecha de fin no puede ser menor que la fecha de inicio.';
+      this.error =
+        'La fecha de fin no puede ser menor que la fecha de inicio.';
       return;
     }
 

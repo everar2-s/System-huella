@@ -10,7 +10,7 @@
         class="btn btn-primary"
         type="button"
         (click)="openCreate()"
-        [disabled]="!members.length"
+        [disabled]="!availableMembers.length"
       >
         Registrar membresía
       </button>
@@ -81,7 +81,6 @@
   </article>
 </section>
 
-<!-- MODAL REGISTRAR MEMBRESÍA -->
 <div class="modal-backdrop" *ngIf="creating" (click)="cancelCreate()">
   <div class="modal-card" (click)="$event.stopPropagation()">
     <div class="modal-header">
@@ -100,7 +99,10 @@
         <label>Socio</label>
         <select name="memberId" [(ngModel)]="form.memberId" required>
           <option [ngValue]="0" disabled>Selecciona un socio</option>
-          <option *ngFor="let member of members" [ngValue]="member.id">
+          <option
+            *ngFor="let member of availableMembers"
+            [ngValue]="member.id"
+          >
             {{ member.id }} - {{ member.fullName }}
           </option>
         </select>
