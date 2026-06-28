@@ -2,20 +2,23 @@ import {
   Column,
   CreateDateColumn,
   Entity,
+  Index,
   JoinColumn,
   ManyToOne,
   PrimaryGeneratedColumn,
 } from 'typeorm';
 
 import { Member } from '../members/member.entity';
+import { User } from '../auth/user.entity';
 
 @Entity('fingerprints')
+@Index(['createdById', 'fingerprintId'], { unique: true })
 export class Fingerprint {
   @PrimaryGeneratedColumn()
   id!: number;
 
-  @Column({ unique: true })
-  fingerprintId!  : number;
+  @Column()
+  fingerprintId!: number;
 
   @Column()
   fingerName!: string;
@@ -31,6 +34,13 @@ export class Fingerprint {
   })
   @JoinColumn({ name: 'memberId' })
   member!: Member;
+
+  @Column({ nullable: true })
+  createdById!: number;
+
+  @ManyToOne(() => User, { nullable: true })
+  @JoinColumn({ name: 'createdById' })
+  createdBy!: User;
 
   @CreateDateColumn()
   createdAt!: Date;

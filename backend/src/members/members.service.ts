@@ -22,7 +22,11 @@ export class MembersService {
     private readonly fingerprintRepository: Repository<Fingerprint>,
   ) {}
 
-  async create(data: CreateMemberDto) {
+  async create(data: CreateMemberDto, userId: number) {
+    if (!userId) {
+      throw new BadRequestException('Usuario no identificado');
+    }
+
     const fullName = data.fullName?.trim();
 
     if (!fullName) {
@@ -36,24 +40,30 @@ export class MembersService {
 
     if (email) {
       const existingEmail = await this.memberRepository.findOne({
-        where: { email },
+        where: {
+          email,
+          createdById: userId,
+        },
       });
 
       if (existingEmail) {
         throw new ConflictException(
-          'Ya existe un socio registrado con ese email',
+          'Ya tienes un socio registrado con ese email',
         );
       }
     }
 
     if (phone) {
       const existingPhone = await this.memberRepository.findOne({
-        where: { phone },
+        where: {
+          phone,
+          createdById: userId,
+        },
       });
 
       if (existingPhone) {
         throw new ConflictException(
-          'Ya existe un socio registrado con ese teléfono',
+          'Ya tienes un socio registrado con ese teléfono',
         );
       }
     }
@@ -71,22 +81,29 @@ export class MembersService {
       membershipStart: data.membershipStart || today,
       membershipEnd:
         data.membershipEnd || end.toISOString().slice(0, 10),
+      createdById: userId,
     });
 
     return this.memberRepository.save(member);
   }
 
-  findAll() {
+  findAll(userId: number) {
     return this.memberRepository.find({
+      where: {
+        createdById: userId,
+      },
       order: {
-        id: 'DESC',
+        id: 'ASC',
       },
     });
   }
 
-  async findOne(id: number) {
+  async findOne(id: number, userId: number) {
     const member = await this.memberRepository.findOne({
-      where: { id },
+      where: {
+        id,
+        createdById: userId,
+      },
     });
 
     if (!member) {
@@ -96,8 +113,8 @@ export class MembersService {
     return member;
   }
 
-  async update(id: number, data: UpdateMemberDto) {
-    const member = await this.findOne(id);
+  async update(id: number, data: UpdateMemberDto, userId: number) {
+    const member = await this.findOne(id, userId);
 
     const fullName = data.fullName?.trim();
     const phone = data.phone?.trim();
@@ -113,13 +130,14 @@ export class MembersService {
       const existingEmail = await this.memberRepository.findOne({
         where: {
           email,
+          createdById: userId,
           id: Not(id),
         },
       });
 
       if (existingEmail) {
         throw new ConflictException(
-          'Ya existe otro socio con ese email',
+          'Ya tienes otro socio con ese email',
         );
       }
     }
@@ -128,13 +146,14 @@ export class MembersService {
       const existingPhone = await this.memberRepository.findOne({
         where: {
           phone,
+          createdById: userId,
           id: Not(id),
         },
       });
 
       if (existingPhone) {
         throw new ConflictException(
-          'Ya existe otro socio con ese teléfono',
+          'Ya tienes otro socio con ese teléfono',
         );
       }
     }
@@ -159,15 +178,19 @@ export class MembersService {
     };
   }
 
-  async suspend(id: number) {
-    const member = await this.findOne(id);
+  async suspend(id: number, userId: number) {
+    const member = await this.findOne(id, userId);
 
     member.status = 'suspendido';
     await this.memberRepository.save(member);
 
     await this.fingerprintRepository.update(
-      { memberId: member.id },
-      { active: false },
+      {
+        memberId: member.id,
+      },
+      {
+        active: false,
+      },
     );
 
     return {
@@ -180,8 +203,8 @@ export class MembersService {
     };
   }
 
-  async reactivate(id: number) {
-    const member = await this.findOne(id);
+  async reactivate(id: number, userId: number) {
+    const member = await this.findOne(id, userId);
 
     const today = new Date().toISOString().slice(0, 10);
 
@@ -190,8 +213,12 @@ export class MembersService {
       await this.memberRepository.save(member);
 
       await this.fingerprintRepository.update(
-        { memberId: member.id },
-        { active: false },
+        {
+          memberId: member.id,
+        },
+        {
+          active: false,
+        },
       );
 
       throw new BadRequestException(

@@ -1,4 +1,5 @@
 import {
+  BadRequestException,
   ConflictException,
   Injectable,
   NotFoundException,
@@ -16,14 +17,18 @@ export class DevicesService {
     private readonly deviceRepository: Repository<Device>,
   ) {}
 
-  async create(data: CreateDeviceDto) {
+  async create(data: CreateDeviceDto, userId: number) {
+    this.validateUser(userId);
+
     const deviceId = data.deviceId.trim();
     const name = data.name.trim();
     const location = data.location?.trim() || undefined;
     const apiKey = data.apiKey.trim();
 
     const existingDevice = await this.deviceRepository.findOne({
-      where: { deviceId },
+      where: {
+        deviceId,
+      },
     });
 
     if (existingDevice) {
@@ -38,22 +43,33 @@ export class DevicesService {
       location,
       apiKey,
       status: 'activo',
+      createdById: userId,
     });
 
     return this.deviceRepository.save(device);
   }
 
-  findAll() {
+  findAll(userId: number) {
+    this.validateUser(userId);
+
     return this.deviceRepository.find({
+      where: {
+        createdById: userId,
+      },
       order: {
-        id: 'DESC',
+        id: 'ASC',
       },
     });
   }
 
-  async findOne(id: number) {
+  async findOne(id: number, userId: number) {
+    this.validateUser(userId);
+
     const device = await this.deviceRepository.findOne({
-      where: { id },
+      where: {
+        id,
+        createdById: userId,
+      },
     });
 
     if (!device) {
@@ -71,8 +87,8 @@ export class DevicesService {
     });
   }
 
-  async deactivate(id: number) {
-    const device = await this.findOne(id);
+  async deactivate(id: number, userId: number) {
+    const device = await this.findOne(id, userId);
 
     device.status = 'inactivo';
 
@@ -82,5 +98,11 @@ export class DevicesService {
       message: 'Dispositivo desactivado correctamente',
       device,
     };
+  }
+
+  private validateUser(userId: number) {
+    if (!userId) {
+      throw new BadRequestException('Usuario no identificado');
+    }
   }
 }

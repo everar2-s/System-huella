@@ -6,6 +6,8 @@ import {
   Headers,
   Param,
   Post,
+  Req,
+  UnauthorizedException,
   UseGuards,
 } from '@nestjs/common';
 
@@ -35,30 +37,52 @@ export class FingerprintsController {
 
   @UseGuards(JwtAuthGuard)
   @Post()
-  create(@Body() body: CreateFingerprintDto) {
-    return this.fingerprintsService.create(body);
+  create(@Body() body: CreateFingerprintDto, @Req() req: any) {
+    const userId = this.getUserId(req);
+    return this.fingerprintsService.create(body, userId);
   }
-
   @Post('verify')
-  verify(@Body() body: VerifyFingerprintDto) {
-    return this.fingerprintsService.verify(body.fingerprintId);
-  }
+verify(
+  @Headers('x-api-key') apiKey: string,
+  @Body() body: VerifyFingerprintDto,
+) {
+  return this.fingerprintsService.verify({
+    fingerprintId: body.fingerprintId,
+    deviceId: body.deviceId,
+    apiKey,
+  });
+}
+
+ 
 
   @UseGuards(JwtAuthGuard)
   @Get()
-  findAll() {
-    return this.fingerprintsService.findAll();
+  findAll(@Req() req: any) {
+    const userId = this.getUserId(req);
+    return this.fingerprintsService.findAll(userId);
   }
 
   @UseGuards(JwtAuthGuard)
   @Get(':id')
-  findOne(@Param('id') id: string) {
-    return this.fingerprintsService.findOne(Number(id));
+  findOne(@Param('id') id: string, @Req() req: any) {
+    const userId = this.getUserId(req);
+    return this.fingerprintsService.findOne(Number(id), userId);
   }
 
   @UseGuards(JwtAuthGuard)
   @Delete(':id')
-  remove(@Param('id') id: string) {
-    return this.fingerprintsService.remove(Number(id));
+  remove(@Param('id') id: string, @Req() req: any) {
+    const userId = this.getUserId(req);
+    return this.fingerprintsService.remove(Number(id), userId);
+  }
+
+  private getUserId(req: any) {
+    const userId = req.user?.userId || req.user?.sub || req.user?.id;
+
+    if (!userId) {
+      throw new UnauthorizedException('Usuario no identificado');
+    }
+
+    return userId;
   }
 }

@@ -6,6 +6,8 @@ import {
   ParseIntPipe,
   Patch,
   Post,
+  Req,
+  UnauthorizedException,
   UseGuards,
 } from '@nestjs/common';
 
@@ -19,22 +21,42 @@ export class DevicesController {
   constructor(private readonly devicesService: DevicesService) {}
 
   @Post()
-  create(@Body() body: CreateDeviceDto) {
-    return this.devicesService.create(body);
+  create(@Body() body: CreateDeviceDto, @Req() req: any) {
+    const userId = this.getUserId(req);
+    return this.devicesService.create(body, userId);
   }
 
   @Get()
-  findAll() {
-    return this.devicesService.findAll();
+  findAll(@Req() req: any) {
+    const userId = this.getUserId(req);
+    return this.devicesService.findAll(userId);
   }
 
   @Get(':id')
-  findOne(@Param('id', ParseIntPipe) id: number) {
-    return this.devicesService.findOne(id);
+  findOne(
+    @Param('id', ParseIntPipe) id: number,
+    @Req() req: any,
+  ) {
+    const userId = this.getUserId(req);
+    return this.devicesService.findOne(id, userId);
   }
 
   @Patch(':id/deactivate')
-  deactivate(@Param('id', ParseIntPipe) id: number) {
-    return this.devicesService.deactivate(id);
+  deactivate(
+    @Param('id', ParseIntPipe) id: number,
+    @Req() req: any,
+  ) {
+    const userId = this.getUserId(req);
+    return this.devicesService.deactivate(id, userId);
+  }
+
+  private getUserId(req: any) {
+    const userId = req.user?.userId || req.user?.sub || req.user?.id;
+
+    if (!userId) {
+      throw new UnauthorizedException('Usuario no identificado');
+    }
+
+    return userId;
   }
 }

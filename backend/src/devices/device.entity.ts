@@ -2,8 +2,12 @@ import {
   Column,
   CreateDateColumn,
   Entity,
+  JoinColumn,
+  ManyToOne,
   PrimaryGeneratedColumn,
 } from 'typeorm';
+
+import { User } from '../auth/user.entity';
 
 @Entity('devices')
 export class Device {
@@ -17,13 +21,20 @@ export class Device {
   name!: string;
 
   @Column({ nullable: true })
-  location! : string;
+  location!: string;
 
   @Column({ default: 'activo' })
   status!: string;
 
   @Column()
   apiKey!: string;
+
+  @Column({ nullable: true })
+  createdById!: number;
+
+  @ManyToOne(() => User, { nullable: true })
+  @JoinColumn({ name: 'createdById' })
+  createdBy!: User;
 
   @CreateDateColumn()
   createdAt!: Date;

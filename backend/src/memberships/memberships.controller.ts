@@ -5,6 +5,8 @@ import {
   Param,
   Patch,
   Post,
+  Req,
+  UnauthorizedException,
   UseGuards,
 } from '@nestjs/common';
 
@@ -20,32 +22,55 @@ export class MembershipsController {
   ) {}
 
   @Post()
-  create(@Body() body: CreateMembershipDto) {
-    return this.membershipsService.create(body);
+  create(@Body() body: CreateMembershipDto, @Req() req: any) {
+    const userId = this.getUserId(req);
+    return this.membershipsService.create(body, userId);
   }
 
   @Post('renew')
-  renew(@Body() body: CreateMembershipDto) {
-    return this.membershipsService.renew(body);
+  renew(@Body() body: CreateMembershipDto, @Req() req: any) {
+    const userId = this.getUserId(req);
+    return this.membershipsService.renew(body, userId);
   }
 
   @Get()
-  findAll() {
-    return this.membershipsService.findAll();
+  findAll(@Req() req: any) {
+    const userId = this.getUserId(req);
+    return this.membershipsService.findAll(userId);
   }
 
   @Get('member/:memberId')
-  findByMember(@Param('memberId') memberId: string) {
-    return this.membershipsService.findByMember(Number(memberId));
+  findByMember(
+    @Param('memberId') memberId: string,
+    @Req() req: any,
+  ) {
+    const userId = this.getUserId(req);
+
+    return this.membershipsService.findByMember(
+      Number(memberId),
+      userId,
+    );
   }
 
   @Patch('expire/check')
-  expireExpiredMemberships() {
-    return this.membershipsService.expireExpiredMemberships();
+  expireExpiredMemberships(@Req() req: any) {
+    const userId = this.getUserId(req);
+    return this.membershipsService.expireExpiredMemberships(userId);
   }
 
   @Patch(':id/cancel')
-  cancel(@Param('id') id: string) {
-    return this.membershipsService.cancel(Number(id));
+  cancel(@Param('id') id: string, @Req() req: any) {
+    const userId = this.getUserId(req);
+    return this.membershipsService.cancel(Number(id), userId);
+  }
+
+  private getUserId(req: any) {
+    const userId = req.user?.userId || req.user?.sub || req.user?.id;
+
+    if (!userId) {
+      throw new UnauthorizedException('Usuario no identificado');
+    }
+
+    return userId;
   }
 }

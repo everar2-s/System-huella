@@ -26,11 +26,15 @@ export class MembershipsService {
     private readonly fingerprintRepository: Repository<Fingerprint>,
   ) {}
 
-  async create(data: CreateMembershipDto) {
+  async create(data: CreateMembershipDto, userId: number) {
+    this.validateUser(userId);
     this.validateDates(data.startDate, data.endDate);
 
     const member = await this.memberRepository.findOne({
-      where: { id: data.memberId },
+      where: {
+        id: data.memberId,
+        createdById: userId,
+      },
     });
 
     if (!member) {
@@ -40,6 +44,7 @@ export class MembershipsService {
     const currentMembership = await this.membershipRepository.findOne({
       where: {
         memberId: data.memberId,
+        createdById: userId,
         status: In(['activa', 'suspendida']),
       },
     });
@@ -50,14 +55,18 @@ export class MembershipsService {
       );
     }
 
-    return this.createActiveMembership(member, data);
+    return this.createActiveMembership(member, data, userId);
   }
 
-  async renew(data: CreateMembershipDto) {
+  async renew(data: CreateMembershipDto, userId: number) {
+    this.validateUser(userId);
     this.validateDates(data.startDate, data.endDate);
 
     const member = await this.memberRepository.findOne({
-      where: { id: data.memberId },
+      where: {
+        id: data.memberId,
+        createdById: userId,
+      },
     });
 
     if (!member) {
@@ -67,6 +76,7 @@ export class MembershipsService {
     const currentMemberships = await this.membershipRepository.find({
       where: {
         memberId: data.memberId,
+        createdById: userId,
         status: In(['activa', 'suspendida']),
       },
     });
@@ -82,7 +92,11 @@ export class MembershipsService {
       await this.membershipRepository.save(membership);
     }
 
-    const newMembership = await this.createActiveMembership(member, data);
+    const newMembership = await this.createActiveMembership(
+      member,
+      data,
+      userId,
+    );
 
     return {
       message: 'Membresía renovada correctamente',
@@ -91,23 +105,42 @@ export class MembershipsService {
     };
   }
 
-  async findAll() {
-    await this.expireExpiredMemberships();
+  async findAll(userId: number) {
+    this.validateUser(userId);
+
+    await this.expireExpiredMemberships(userId);
 
     return this.membershipRepository.find({
+      where: {
+        createdById: userId,
+      },
       relations: {
         member: true,
       },
       order: {
-        id: 'DESC',
+        id: 'ASC',
       },
     });
   }
 
-  findByMember(memberId: number) {
+  async findByMember(memberId: number, userId: number) {
+    this.validateUser(userId);
+
+    const member = await this.memberRepository.findOne({
+      where: {
+        id: memberId,
+        createdById: userId,
+      },
+    });
+
+    if (!member) {
+      throw new NotFoundException('El socio no existe');
+    }
+
     return this.membershipRepository.find({
       where: {
         memberId,
+        createdById: userId,
       },
       relations: {
         member: true,
@@ -118,9 +151,14 @@ export class MembershipsService {
     });
   }
 
-  async cancel(id: number) {
+  async cancel(id: number, userId: number) {
+    this.validateUser(userId);
+
     const membership = await this.membershipRepository.findOne({
-      where: { id },
+      where: {
+        id,
+        createdById: userId,
+      },
       relations: {
         member: true,
       },
@@ -131,7 +169,6 @@ export class MembershipsService {
     }
 
     membership.status = 'cancelada';
-
     await this.membershipRepository.save(membership);
 
     if (membership.member) {
@@ -150,14 +187,20 @@ export class MembershipsService {
     };
   }
 
-  async expireExpiredMemberships() {
+  async expireExpiredMemberships(userId?: number) {
     const today = new Date().toISOString().split('T')[0];
 
+    const where: any = {
+      status: 'activa',
+      endDate: LessThan(today),
+    };
+
+    if (userId) {
+      where.createdById = userId;
+    }
+
     const expiredMemberships = await this.membershipRepository.find({
-      where: {
-        status: 'activa',
-        endDate: LessThan(today),
-      },
+      where,
       relations: {
         member: true,
       },
@@ -170,6 +213,11 @@ export class MembershipsService {
       if (membership.member) {
         membership.member.status = 'suspendido';
         await this.memberRepository.save(membership.member);
+
+        await this.fingerprintRepository.update(
+          { memberId: membership.member.id },
+          { active: false },
+        );
       }
     }
 
@@ -184,6 +232,12 @@ export class MembershipsService {
     await this.expireExpiredMemberships();
   }
 
+  private validateUser(userId: number) {
+    if (!userId) {
+      throw new BadRequestException('Usuario no identificado');
+    }
+  }
+
   private validateDates(startDate: string, endDate: string) {
     if (endDate < startDate) {
       throw new BadRequestException(
@@ -195,6 +249,7 @@ export class MembershipsService {
   private async createActiveMembership(
     member: Member,
     data: CreateMembershipDto,
+    userId: number,
   ) {
     const hasFingerprint = await this.fingerprintRepository.findOne({
       where: {
@@ -210,6 +265,7 @@ export class MembershipsService {
       price: data.price ?? 0,
       status: 'activa',
       member,
+      createdById: userId,
     });
 
     const savedMembership =

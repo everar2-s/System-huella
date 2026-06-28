@@ -30,13 +30,7 @@ export class AccessService {
       return {
         valid: false,
         message: 'deviceId es requerido',
-      };
-    }
-
-    if (!apiKey) {
-      return {
-        valid: false,
-        message: 'apiKey es requerida',
+        userId: null,
       };
     }
 
@@ -46,6 +40,23 @@ export class AccessService {
       return {
         valid: false,
         message: 'Dispositivo no registrado',
+        userId: null,
+      };
+    }
+
+    if (!device.createdById) {
+      return {
+        valid: false,
+        message: 'Dispositivo sin usuario asignado',
+        userId: null,
+      };
+    }
+
+    if (!apiKey) {
+      return {
+        valid: false,
+        message: 'apiKey es requerida',
+        userId: device.createdById,
       };
     }
 
@@ -53,6 +64,7 @@ export class AccessService {
       return {
         valid: false,
         message: 'Dispositivo inactivo',
+        userId: device.createdById,
       };
     }
 
@@ -60,21 +72,46 @@ export class AccessService {
       return {
         valid: false,
         message: 'apiKey inválida',
+        userId: device.createdById,
       };
     }
 
     return {
       valid: true,
       message: 'Dispositivo autorizado',
+      userId: device.createdById,
     };
   }
 
-  private async validateMembershipForAccess(member: Member) {
+  private async createAttendance(
+    data: {
+      member?: Member;
+      memberId?: number;
+      fingerprintId?: number;
+      deviceId?: string;
+      type: string;
+      accessGranted: boolean;
+      message: string;
+    },
+    userId: number | null,
+  ) {
+    if (!userId) {
+      return null;
+    }
+
+    return this.attendanceService.create(data, userId);
+  }
+
+  private async validateMembershipForAccess(
+    member: Member,
+    userId: number,
+  ) {
     const today = new Date().toISOString().split('T')[0];
 
     const activeMembership = await this.membershipRepository.findOne({
       where: {
         memberId: member.id,
+        createdById: userId,
         status: 'activa',
       },
       order: {
@@ -82,10 +119,11 @@ export class AccessService {
       },
     });
 
-    if (activeMembership === null) {
+    if (!activeMembership) {
       const suspendedMembership = await this.membershipRepository.findOne({
         where: {
           memberId: member.id,
+          createdById: userId,
           status: 'suspendida',
         },
         order: {
@@ -104,14 +142,22 @@ export class AccessService {
       };
     }
 
-    const membershipEndDate = activeMembership.endDate;
-
-    if (membershipEndDate < today) {
+    if (activeMembership.endDate < today) {
       activeMembership.status = 'suspendida';
       await this.membershipRepository.save(activeMembership);
 
       member.status = 'suspendido';
       await this.memberRepository.save(member);
+
+      await this.fingerprintRepository.update(
+        {
+          memberId: member.id,
+          createdById: userId,
+        },
+        {
+          active: false,
+        },
+      );
 
       return {
         valid: false,
@@ -136,13 +182,16 @@ export class AccessService {
     );
 
     if (!deviceValidation.valid) {
-      await this.attendanceService.create({
-        fingerprintId: data.fingerprintId,
-        deviceId: data.deviceId,
-        type: 'entrada',
-        accessGranted: false,
-        message: deviceValidation.message,
-      });
+      await this.createAttendance(
+        {
+          fingerprintId: data.fingerprintId,
+          deviceId: data.deviceId,
+          type: 'entrada',
+          accessGranted: false,
+          message: deviceValidation.message,
+        },
+        deviceValidation.userId,
+      );
 
       return {
         access: false,
@@ -150,9 +199,19 @@ export class AccessService {
       };
     }
 
+    const userId = deviceValidation.userId;
+
+    if (!userId) {
+      return {
+        access: false,
+        message: 'Usuario del dispositivo no identificado',
+      };
+    }
+
     const fingerprint = await this.fingerprintRepository.findOne({
       where: {
         fingerprintId: data.fingerprintId,
+        createdById: userId,
       },
       relations: {
         member: true,
@@ -160,13 +219,16 @@ export class AccessService {
     });
 
     if (!fingerprint) {
-      await this.attendanceService.create({
-        fingerprintId: data.fingerprintId,
-        deviceId: data.deviceId,
-        type: 'entrada',
-        accessGranted: false,
-        message: 'Huella no registrada',
-      });
+      await this.createAttendance(
+        {
+          fingerprintId: data.fingerprintId,
+          deviceId: data.deviceId,
+          type: 'entrada',
+          accessGranted: false,
+          message: 'Huella no registrada',
+        },
+        userId,
+      );
 
       return {
         access: false,
@@ -177,13 +239,16 @@ export class AccessService {
     const member = fingerprint.member;
 
     if (!member) {
-      await this.attendanceService.create({
-        fingerprintId: data.fingerprintId,
-        deviceId: data.deviceId,
-        type: 'entrada',
-        accessGranted: false,
-        message: 'La huella no está vinculada a ningún socio',
-      });
+      await this.createAttendance(
+        {
+          fingerprintId: data.fingerprintId,
+          deviceId: data.deviceId,
+          type: 'entrada',
+          accessGranted: false,
+          message: 'La huella no está vinculada a ningún socio',
+        },
+        userId,
+      );
 
       return {
         access: false,
@@ -191,18 +256,40 @@ export class AccessService {
       };
     }
 
+    if (member.createdById !== userId) {
+      await this.createAttendance(
+        {
+          member,
+          fingerprintId: data.fingerprintId,
+          deviceId: data.deviceId,
+          type: 'entrada',
+          accessGranted: false,
+          message: 'El socio no pertenece a este dispositivo',
+        },
+        userId,
+      );
+
+      return {
+        access: false,
+        message: 'El socio no pertenece a este dispositivo',
+      };
+    }
+
     const membershipValidation =
-      await this.validateMembershipForAccess(member);
+      await this.validateMembershipForAccess(member, userId);
 
     if (!membershipValidation.valid) {
-      await this.attendanceService.create({
-        member,
-        fingerprintId: data.fingerprintId,
-        deviceId: data.deviceId,
-        type: 'entrada',
-        accessGranted: false,
-        message: membershipValidation.message,
-      });
+      await this.createAttendance(
+        {
+          member,
+          fingerprintId: data.fingerprintId,
+          deviceId: data.deviceId,
+          type: 'entrada',
+          accessGranted: false,
+          message: membershipValidation.message,
+        },
+        userId,
+      );
 
       return {
         access: false,
@@ -220,14 +307,17 @@ export class AccessService {
     }
 
     if (member.status === 'suspendido') {
-      await this.attendanceService.create({
-        member,
-        fingerprintId: data.fingerprintId,
-        deviceId: data.deviceId,
-        type: 'entrada',
-        accessGranted: false,
-        message: 'Socio suspendido',
-      });
+      await this.createAttendance(
+        {
+          member,
+          fingerprintId: data.fingerprintId,
+          deviceId: data.deviceId,
+          type: 'entrada',
+          accessGranted: false,
+          message: 'Socio suspendido',
+        },
+        userId,
+      );
 
       return {
         access: false,
@@ -237,14 +327,17 @@ export class AccessService {
     }
 
     if (member.status === 'inactivo') {
-      await this.attendanceService.create({
-        member,
-        fingerprintId: data.fingerprintId,
-        deviceId: data.deviceId,
-        type: 'entrada',
-        accessGranted: false,
-        message: 'Socio inactivo',
-      });
+      await this.createAttendance(
+        {
+          member,
+          fingerprintId: data.fingerprintId,
+          deviceId: data.deviceId,
+          type: 'entrada',
+          accessGranted: false,
+          message: 'Socio inactivo',
+        },
+        userId,
+      );
 
       return {
         access: false,
@@ -254,14 +347,17 @@ export class AccessService {
     }
 
     if (!fingerprint.active) {
-      await this.attendanceService.create({
-        member,
-        fingerprintId: data.fingerprintId,
-        deviceId: data.deviceId,
-        type: 'entrada',
-        accessGranted: false,
-        message: 'Huella inactiva',
-      });
+      await this.createAttendance(
+        {
+          member,
+          fingerprintId: data.fingerprintId,
+          deviceId: data.deviceId,
+          type: 'entrada',
+          accessGranted: false,
+          message: 'Huella inactiva',
+        },
+        userId,
+      );
 
       return {
         access: false,
@@ -270,17 +366,23 @@ export class AccessService {
     }
 
     const lastLog =
-      await this.attendanceService.findLastSuccessfulByMember(member.id);
+      await this.attendanceService.findLastSuccessfulByMember(
+        member.id,
+        userId,
+      );
 
     if (lastLog && lastLog.type === 'entrada') {
-      await this.attendanceService.create({
-        member,
-        fingerprintId: data.fingerprintId,
-        deviceId: data.deviceId,
-        type: 'entrada',
-        accessGranted: false,
-        message: 'Ya tienes una entrada activa',
-      });
+      await this.createAttendance(
+        {
+          member,
+          fingerprintId: data.fingerprintId,
+          deviceId: data.deviceId,
+          type: 'entrada',
+          accessGranted: false,
+          message: 'Ya tienes una entrada activa',
+        },
+        userId,
+      );
 
       return {
         access: false,
@@ -298,30 +400,31 @@ export class AccessService {
     member.status = 'activo';
     await this.memberRepository.save(member);
 
-    await this.attendanceService.create({
-      member,
-      fingerprintId: data.fingerprintId,
-      deviceId: data.deviceId,
-      type: 'entrada',
-      accessGranted: true,
-      message: 'Acceso permitido',
-    });
+    await this.createAttendance(
+      {
+        member,
+        fingerprintId: data.fingerprintId,
+        deviceId: data.deviceId,
+        type: 'entrada',
+        accessGranted: true,
+        message: 'Acceso permitido',
+      },
+      userId,
+    );
 
     return {
-      access: true,
-      message: 'Acceso permitido',
-      member: {
-        id: member.id,
-        fullName: member.fullName,
-        phone: member.phone,
-        email: member.email,
-        status: member.status,
-        membershipStart: member.membershipStart,
-        membershipEnd: member.membershipEnd,
-      },
-      deviceId: data.deviceId ?? null,
-      type: 'entrada',
-    };
+  access: true,
+  message: 'Acceso permitido',
+  member: {
+    id: member.id,
+    fullName: member.fullName,
+    status: member.status,
+    membershipStart: member.membershipStart,
+    membershipEnd: member.membershipEnd,
+  },
+  deviceId: data.deviceId ?? null,
+  type: 'entrada',
+};
   }
 
   async checkOut(data: {
@@ -335,13 +438,16 @@ export class AccessService {
     );
 
     if (!deviceValidation.valid) {
-      await this.attendanceService.create({
-        fingerprintId: data.fingerprintId,
-        deviceId: data.deviceId,
-        type: 'salida',
-        accessGranted: false,
-        message: deviceValidation.message,
-      });
+      await this.createAttendance(
+        {
+          fingerprintId: data.fingerprintId,
+          deviceId: data.deviceId,
+          type: 'salida',
+          accessGranted: false,
+          message: deviceValidation.message,
+        },
+        deviceValidation.userId,
+      );
 
       return {
         access: false,
@@ -349,9 +455,19 @@ export class AccessService {
       };
     }
 
+    const userId = deviceValidation.userId;
+
+    if (!userId) {
+      return {
+        access: false,
+        message: 'Usuario del dispositivo no identificado',
+      };
+    }
+
     const fingerprint = await this.fingerprintRepository.findOne({
       where: {
         fingerprintId: data.fingerprintId,
+        createdById: userId,
       },
       relations: {
         member: true,
@@ -359,13 +475,16 @@ export class AccessService {
     });
 
     if (!fingerprint) {
-      await this.attendanceService.create({
-        fingerprintId: data.fingerprintId,
-        deviceId: data.deviceId,
-        type: 'salida',
-        accessGranted: false,
-        message: 'Huella no registrada',
-      });
+      await this.createAttendance(
+        {
+          fingerprintId: data.fingerprintId,
+          deviceId: data.deviceId,
+          type: 'salida',
+          accessGranted: false,
+          message: 'Huella no registrada',
+        },
+        userId,
+      );
 
       return {
         access: false,
@@ -376,13 +495,16 @@ export class AccessService {
     const member = fingerprint.member;
 
     if (!member) {
-      await this.attendanceService.create({
-        fingerprintId: data.fingerprintId,
-        deviceId: data.deviceId,
-        type: 'salida',
-        accessGranted: false,
-        message: 'La huella no está vinculada a ningún socio',
-      });
+      await this.createAttendance(
+        {
+          fingerprintId: data.fingerprintId,
+          deviceId: data.deviceId,
+          type: 'salida',
+          accessGranted: false,
+          message: 'La huella no está vinculada a ningún socio',
+        },
+        userId,
+      );
 
       return {
         access: false,
@@ -390,18 +512,43 @@ export class AccessService {
       };
     }
 
+    if (member.createdById !== userId) {
+      await this.createAttendance(
+        {
+          member,
+          fingerprintId: data.fingerprintId,
+          deviceId: data.deviceId,
+          type: 'salida',
+          accessGranted: false,
+          message: 'El socio no pertenece a este dispositivo',
+        },
+        userId,
+      );
+
+      return {
+        access: false,
+        message: 'El socio no pertenece a este dispositivo',
+      };
+    }
+
     const lastLog =
-      await this.attendanceService.findLastSuccessfulByMember(member.id);
+      await this.attendanceService.findLastSuccessfulByMember(
+        member.id,
+        userId,
+      );
 
     if (!lastLog || lastLog.type !== 'entrada') {
-      await this.attendanceService.create({
-        member,
-        fingerprintId: data.fingerprintId,
-        deviceId: data.deviceId,
-        type: 'salida',
-        accessGranted: false,
-        message: 'No puedes marcar salida sin una entrada activa',
-      });
+      await this.createAttendance(
+        {
+          member,
+          fingerprintId: data.fingerprintId,
+          deviceId: data.deviceId,
+          type: 'salida',
+          accessGranted: false,
+          message: 'No puedes marcar salida sin una entrada activa',
+        },
+        userId,
+      );
 
       return {
         access: false,
@@ -416,14 +563,17 @@ export class AccessService {
       };
     }
 
-    await this.attendanceService.create({
-      member,
-      fingerprintId: data.fingerprintId,
-      deviceId: data.deviceId,
-      type: 'salida',
-      accessGranted: true,
-      message: 'Salida registrada',
-    });
+    await this.createAttendance(
+      {
+        member,
+        fingerprintId: data.fingerprintId,
+        deviceId: data.deviceId,
+        type: 'salida',
+        accessGranted: true,
+        message: 'Salida registrada',
+      },
+      userId,
+    );
 
     return {
       access: true,
