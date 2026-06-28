@@ -19,7 +19,10 @@ export class MembersComponent implements OnInit {
   members: Member[] = [];
   loading = false;
   saving = false;
+
+  creating = false;
   editing = false;
+
   error = '';
   success = '';
 
@@ -52,11 +55,25 @@ export class MembersComponent implements OnInit {
     });
   }
 
+  openCreate() {
+    this.error = '';
+    this.success = '';
+    this.form = this.getEmptyForm();
+    this.creating = true;
+  }
+
+  cancelCreate() {
+    this.creating = false;
+    this.form = this.getEmptyForm();
+  }
+
   createMember() {
     this.error = '';
     this.success = '';
 
     const fullName = this.form.fullName.trim();
+    const phone = this.form.phone.trim();
+    const email = this.form.email.trim();
 
     if (!fullName) {
       this.error = 'El nombre completo es obligatorio.';
@@ -68,15 +85,15 @@ export class MembersComponent implements OnInit {
     const data = {
       ...this.form,
       fullName,
-      phone: this.form.phone.trim(),
-      email: this.form.email.trim(),
+      phone,
+      email,
     };
 
     this.apiService.createMember(data).subscribe({
       next: () => {
         this.success = 'Socio registrado correctamente.';
-        this.form = this.getEmptyForm();
         this.saving = false;
+        this.cancelCreate();
         this.loadMembers();
       },
       error: (error) => {

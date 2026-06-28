@@ -5,63 +5,19 @@
       <p>Registra, consulta y edita los miembros del gimnasio.</p>
     </div>
 
-    <button class="btn btn-light" type="button" (click)="loadMembers()">
-      Actualizar
-    </button>
+    <div class="page-actions">
+      <button class="btn btn-primary" type="button" (click)="openCreate()">
+        Registrar socio
+      </button>
+
+      <button class="btn btn-light" type="button" (click)="loadMembers()">
+        Actualizar
+      </button>
+    </div>
   </div>
 
   <div *ngIf="error" class="alert error">{{ error }}</div>
   <div *ngIf="success" class="alert success">{{ success }}</div>
-
-  <article class="card section-card">
-    <div class="section-head">
-      <div>
-        <h3>Registrar socio</h3>
-        <span>Agrega un nuevo miembro al sistema</span>
-      </div>
-    </div>
-
-    <form class="member-form" (ngSubmit)="createMember()">
-      <div class="field">
-        <label>Nombre completo</label>
-        <input
-          name="fullName"
-          [(ngModel)]="form.fullName"
-          required
-          placeholder="Nombre completo del socio"
-        />
-      </div>
-
-      <div class="field">
-        <label>Teléfono</label>
-        <input
-          name="phone"
-          [(ngModel)]="form.phone"
-          placeholder="Teléfono"
-        />
-      </div>
-
-      <div class="field">
-        <label>Email</label>
-        <input
-          type="email"
-          name="email"
-          [(ngModel)]="form.email"
-          placeholder="correo@ejemplo.com"
-        />
-      </div>
-
-      <div class="form-action">
-        <button
-          class="btn btn-primary"
-          type="submit"
-          [disabled]="saving || !form.fullName.trim()"
-        >
-          {{ saving ? 'Guardando...' : 'Registrar socio' }}
-        </button>
-      </div>
-    </form>
-  </article>
 
   <article class="card table-card">
     <div class="section-head">
@@ -115,6 +71,72 @@
   </article>
 </section>
 
+<!-- MODAL REGISTRAR SOCIO -->
+<div class="modal-backdrop" *ngIf="creating" (click)="cancelCreate()">
+  <div class="modal-card" (click)="$event.stopPropagation()">
+    <div class="modal-header">
+      <div>
+        <h3>Registrar socio</h3>
+        <p>Agrega un nuevo miembro al sistema.</p>
+      </div>
+
+      <button class="modal-close" type="button" (click)="cancelCreate()">
+        ×
+      </button>
+    </div>
+
+    <form class="modal-form" (ngSubmit)="createMember()">
+      <div class="field">
+        <label>Nombre completo</label>
+        <input
+          name="fullName"
+          [(ngModel)]="form.fullName"
+          required
+          placeholder="Nombre completo del socio"
+        />
+      </div>
+
+      <div class="field">
+        <label>Teléfono</label>
+        <input
+          name="phone"
+          [(ngModel)]="form.phone"
+          placeholder="Teléfono"
+        />
+      </div>
+
+      <div class="field">
+        <label>Email</label>
+        <input
+          type="email"
+          name="email"
+          [(ngModel)]="form.email"
+          placeholder="correo@ejemplo.com"
+        />
+      </div>
+
+      <div class="modal-actions">
+        <button
+          class="btn btn-primary"
+          type="submit"
+          [disabled]="saving || !form.fullName.trim()"
+        >
+          {{ saving ? 'Guardando...' : 'Registrar socio' }}
+        </button>
+
+        <button
+          class="btn btn-outline"
+          type="button"
+          (click)="cancelCreate()"
+        >
+          Cancelar
+        </button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- MODAL EDITAR SOCIO -->
 <div class="modal-backdrop" *ngIf="editing" (click)="cancelEdit()">
   <div class="modal-card" (click)="$event.stopPropagation()">
     <div class="modal-header">
