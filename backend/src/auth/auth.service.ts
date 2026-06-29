@@ -38,16 +38,24 @@ export class AuthService {
     if (!fullName) {
       throw new BadRequestException('El nombre completo es obligatorio');
     }
+if (!email) {
+  throw new BadRequestException('El correo es obligatorio');
+}
 
-    if (!email) {
-      throw new BadRequestException('El correo es obligatorio');
-    }
+const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
-    if (!password || password.length < 6) {
-      throw new ForbiddenException(
-        'La contraseña debe tener al menos 6 caracteres',
-      );
-    }
+if (!emailRegex.test(email)) {
+  throw new BadRequestException('Ingresa un correo electrónico válido');
+}
+
+   const strongPasswordRegex =
+  /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&.#_-])[A-Za-z\d@$!%*?&.#_-]{8,}$/;
+
+if (!password || !strongPasswordRegex.test(password)) {
+  throw new ForbiddenException(
+    'La contraseña debe tener mínimo 8 caracteres, una mayúscula, una minúscula, un número y un símbolo',
+  );
+}
 
     const existingUser = await this.userRepository.findOne({
       where: { email },

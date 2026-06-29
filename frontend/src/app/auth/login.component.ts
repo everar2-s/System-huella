@@ -1,7 +1,8 @@
 import { CommonModule } from '@angular/common';
-import { Component, inject } from '@angular/core';
+import { Component, OnInit, inject } from '@angular/core';
 import { FormsModule } from '@angular/forms';
-import { Router } from '@angular/router';
+import { ActivatedRoute, Router } from '@angular/router';
+
 import { AuthService } from '../core/auth.service';
 import { getErrorMessage } from '../core/error.util';
 
@@ -12,9 +13,10 @@ import { getErrorMessage } from '../core/error.util';
   templateUrl: './login.component.html',
   styleUrl: './login.component.css',
 })
-export class LoginComponent {
+export class LoginComponent implements OnInit {
   private readonly authService = inject(AuthService);
   private readonly router = inject(Router);
+  private readonly route = inject(ActivatedRoute);
 
   mode: 'login' | 'register' = 'login';
   loading = false;
@@ -23,17 +25,37 @@ export class LoginComponent {
 
   showLoginPassword = false;
   showRegisterPassword = false;
+  showConfirmPassword = false;
 
   loginForm = {
-    email: 'admin@gym.com',
-    password: '123456',
+    email: '',
+    password: '',
   };
 
   registerForm = {
-    fullName: 'Administrador',
-    email: 'admin@gym.com',
-    password: '123456',
+    fullName: '',
+    email: '',
+    password: '',
+    confirmPassword: '',
   };
+
+  ngOnInit() {
+    this.route.queryParamMap.subscribe((params) => {
+      const verified = params.get('verified');
+
+      if (verified === 'true') {
+        this.success =
+          'Correo verificado correctamente. Ya puedes iniciar sesión.';
+        this.mode = 'login';
+      }
+
+      if (verified === 'false') {
+        this.error =
+          'El enlace de verificación no es válido o ya expiró.';
+        this.mode = 'login';
+      }
+    });
+  }
 
   setMode(mode: 'login' | 'register') {
     this.mode = mode;
@@ -41,6 +63,7 @@ export class LoginComponent {
     this.success = '';
     this.showLoginPassword = false;
     this.showRegisterPassword = false;
+    this.showConfirmPassword = false;
   }
 
   toggleLoginPassword() {
@@ -51,12 +74,68 @@ export class LoginComponent {
     this.showRegisterPassword = !this.showRegisterPassword;
   }
 
+  toggleConfirmPassword() {
+    this.showConfirmPassword = !this.showConfirmPassword;
+  }
+
+  isValidEmail(email: string) {
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    return emailRegex.test(email.trim().toLowerCase());
+  }
+
+  isStrongPassword(password: string) {
+    const strongPasswordRegex =
+      /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&.#_-])[A-Za-z\d@$!%*?&.#_-]{8,}$/;
+
+    return strongPasswordRegex.test(password);
+  }
+
+  passwordsMatch() {
+    return (
+      this.registerForm.password.length > 0 &&
+      this.registerForm.confirmPassword.length > 0 &&
+      this.registerForm.password === this.registerForm.confirmPassword
+    );
+  }
+
+  canLogin() {
+    return (
+      this.isValidEmail(this.loginForm.email) &&
+      this.loginForm.password.trim().length > 0
+    );
+  }
+
+  canRegister() {
+    return (
+      this.registerForm.fullName.trim().length > 0 &&
+      this.isValidEmail(this.registerForm.email) &&
+      this.isStrongPassword(this.registerForm.password) &&
+      this.passwordsMatch()
+    );
+  }
+
   login() {
-    this.loading = true;
     this.error = '';
     this.success = '';
 
-    this.authService.login(this.loginForm).subscribe({
+    if (!this.isValidEmail(this.loginForm.email)) {
+      this.error = 'Ingresa un correo electrónico válido';
+      return;
+    }
+
+    if (!this.loginForm.password.trim()) {
+      this.error = 'La contraseña es obligatoria';
+      return;
+    }
+
+    this.loading = true;
+
+    const data = {
+      email: this.loginForm.email.trim().toLowerCase(),
+      password: this.loginForm.password,
+    };
+
+    this.authService.login(data).subscribe({
       next: () => {
         this.loading = false;
         this.router.navigate(['/']);
@@ -69,19 +148,59 @@ export class LoginComponent {
   }
 
   register() {
-    this.loading = true;
     this.error = '';
     this.success = '';
 
-    this.authService.register(this.registerForm).subscribe({
+    if (!this.registerForm.fullName.trim()) {
+      this.error = 'El nombre completo es obligatorio';
+      return;
+    }
+
+    if (!this.isValidEmail(this.registerForm.email)) {
+      this.error = 'Ingresa un correo electrónico válido';
+      return;
+    }
+
+    if (!this.isStrongPassword(this.registerForm.password)) {
+      this.error =
+        'La contraseña debe tener mínimo 8 caracteres, una mayúscula, una minúscula, un número y un símbolo';
+      return;
+    }
+
+    if (!this.passwordsMatch()) {
+      this.error = 'Las contraseñas no coinciden';
+      return;
+    }
+
+    this.loading = true;
+
+    const data = {
+      fullName: this.registerForm.fullName.trim(),
+      email: this.registerForm.email.trim().toLowerCase(),
+      password: this.registerForm.password,
+    };
+
+    this.authService.register(data).subscribe({
       next: () => {
         this.loading = false;
-        this.success = 'Administrador registrado. Ahora inicia sesión.';
+        this.success =
+          'Administrador registrado. Revisa tu correo para verificar la cuenta antes de iniciar sesión.';
+
         this.mode = 'login';
+
+        this.loginForm.email = data.email;
+        this.loginForm.password = '';
+
+        this.registerForm = {
+          fullName: '',
+          email: '',
+          password: '',
+          confirmPassword: '',
+        };
+
         this.showRegisterPassword = false;
+        this.showConfirmPassword = false;
         this.showLoginPassword = false;
-        this.loginForm.email = this.registerForm.email;
-        this.loginForm.password = this.registerForm.password;
       },
       error: (error) => {
         this.loading = false;

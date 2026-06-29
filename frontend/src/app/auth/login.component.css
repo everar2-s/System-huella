@@ -297,3 +297,66 @@
 .password-toggle i {
   font-size: 18px;
 }
+.password-rules {
+  margin-top: 10px;
+  display: grid;
+  gap: 5px;
+  padding: 10px 12px;
+  background: #f8fafc;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+}
+
+.password-rules p {
+  margin: 0;
+  font-size: 12px;
+  color: #9ca3af;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.password-rules p::before {
+  content: '○';
+  font-weight: 800;
+}
+
+.password-rules p.ok {
+  color: #047857;
+  font-weight: 700;
+}
+
+.password-rules p.ok::before {
+  content: '✓';
+}
+
+.password-match {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  margin-top: 8px;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.password-match.ok {
+  color: #047857;
+}
+
+.error-text {
+  color: #dc2626;
+}
+
+.form .btn:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+  filter: grayscale(0.2);
+}
+
+.form input.ng-invalid.ng-touched {
+  border-color: #dc2626;
+}
+
+.form input.ng-valid.ng-touched {
+  border-color: #047857;
+}

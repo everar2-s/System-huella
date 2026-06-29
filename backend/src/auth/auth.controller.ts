@@ -17,7 +17,13 @@ import { JwtAuthGuard } from './jwt-auth.guard';
 @Controller('auth')
 export class AuthController {
   constructor(private readonly authService: AuthService) {}
-
+  @UseGuards(ThrottlerGuard)
+@Throttle({
+  default: {
+    limit: 3,
+    ttl: 60000,
+  },
+})
   @Post('register')
   register(
     @Body()
