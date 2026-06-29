@@ -4,16 +4,6 @@
       <h2>Socios</h2>
       <p>Registra, consulta y administra los miembros del gimnasio.</p>
     </div>
-
-    <div class="page-actions">
-      <button class="btn btn-primary" type="button" (click)="openCreate()">
-        Registrar socio
-      </button>
-
-      <button class="btn btn-light" type="button" (click)="loadMembers()">
-        Actualizar
-      </button>
-    </div>
   </div>
 
   <div *ngIf="error" class="alert error">{{ error }}</div>
@@ -21,17 +11,11 @@
 
   <article class="card filters-card">
     <div class="section-head">
-      <!-- Filtros 
-      <div>
-        <h3>Filtros</h3>
-        <span>Busca socios por ID, nombre o status.</span>
-      </div>
-      -->
-          <h3>Filtros</h3>
+      <h3>Filtros</h3>
     </div>
 
     <div class="filters-grid">
-      <div class="field">
+      <div class="field filter-id">
         <label>ID</label>
         <input
           type="text"
@@ -41,7 +25,7 @@
         />
       </div>
 
-      <div class="field">
+      <div class="field filter-socio">
         <label>Socio</label>
         <input
           type="text"
@@ -51,7 +35,7 @@
         />
       </div>
 
-      <div class="field">
+      <div class="field filter-status">
         <label>Status</label>
         <select name="filterStatus" [(ngModel)]="filterStatus">
           <option value="">Todos</option>
@@ -66,6 +50,10 @@
       <div class="filter-actions">
         <button class="btn btn-outline" type="button" (click)="clearFilters()">
           Limpiar filtros
+        </button>
+
+        <button class="btn btn-primary" type="button" (click)="openCreate()">
+          Registrar socio
         </button>
       </div>
     </div>

@@ -28,8 +28,7 @@ export class MembershipsComponent implements OnInit {
   error = '';
   success = '';
 
-  filterId = '';
-  filterSocio = '';
+  filterSearch = '';
   filterType = '';
   filterStatus = '';
 
@@ -40,34 +39,40 @@ export class MembershipsComponent implements OnInit {
   }
 
   get filteredMemberships() {
-    const id = this.filterId.trim();
-    const socio = this.normalizeText(this.filterSocio);
+    const searchRaw = this.filterSearch.trim();
+    const searchText = this.normalizeText(searchRaw);
+    const searchNumber = Number(searchRaw);
+
+    const isNumericSearch =
+      searchRaw !== '' && !Number.isNaN(searchNumber);
+
     const type = this.filterType;
     const status = this.filterStatus;
 
     return [...this.memberships]
       .sort((a, b) => a.id - b.id)
       .filter((membership) => {
-        const memberName = membership.member?.fullName || '';
-
-        const matchesId =
-          !id || membership.id.toString().includes(id);
-
-        const matchesSocio =
-          !socio || this.normalizeText(memberName).includes(socio);
-
-        const matchesType =
-          !type || membership.type === type;
-
-        const matchesStatus =
-          !status || membership.status === status;
-
-        return (
-          matchesId &&
-          matchesSocio &&
-          matchesType &&
-          matchesStatus
+        const memberName = this.normalizeText(
+          membership.member?.fullName || '',
         );
+
+        let matchesSearch = true;
+
+        if (searchRaw) {
+          if (isNumericSearch) {
+            matchesSearch =
+              membership.id === searchNumber ||
+              membership.memberId === searchNumber;
+          } else {
+            matchesSearch = memberName.includes(searchText);
+          }
+        }
+
+        const matchesType = !type || membership.type === type;
+
+        const matchesStatus = !status || membership.status === status;
+
+        return matchesSearch && matchesType && matchesStatus;
       });
   }
 
@@ -92,8 +97,7 @@ export class MembershipsComponent implements OnInit {
   }
 
   clearFilters() {
-    this.filterId = '';
-    this.filterSocio = '';
+    this.filterSearch = '';
     this.filterType = '';
     this.filterStatus = '';
   }

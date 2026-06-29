@@ -4,21 +4,6 @@
       <h2>Membresías</h2>
       <p>Controla pagos, vigencias y renovaciones de los socios.</p>
     </div>
-
-    <div class="page-actions">
-      <button
-        class="btn btn-primary"
-        type="button"
-        (click)="openCreate()"
-        [disabled]="!availableMembers.length"
-      >
-        Registrar membresía
-      </button>
-
-      <button class="btn btn-light" type="button" (click)="loadData()">
-        Actualizar
-      </button>
-    </div>
   </div>
 
   <div *ngIf="error" class="alert error">{{ error }}</div>
@@ -28,28 +13,17 @@
     <div class="section-head">
       <div>
         <h3>Filtros</h3>
-        <!--<span>Busca membresías por ID, socio, tipo o estatus.</span>-->
       </div>
     </div>
 
     <div class="filters-grid">
       <div class="field">
-        <label>ID</label>
+        <label>Buscar</label>
         <input
           type="text"
-          name="filterId"
-          [(ngModel)]="filterId"
-          placeholder="Ejemplo: 1"
-        />
-      </div>
-
-      <div class="field">
-        <label>Socio</label>
-        <input
-          type="text"
-          name="filterSocio"
-          [(ngModel)]="filterSocio"
-          placeholder="Nombre del socio"
+          name="filterSearch"
+          [(ngModel)]="filterSearch"
+          placeholder="ID o nombre del socio"
         />
       </div>
 
@@ -78,6 +52,15 @@
       <div class="filter-actions">
         <button class="btn btn-outline" type="button" (click)="clearFilters()">
           Limpiar filtros
+        </button>
+
+        <button
+          class="btn btn-primary"
+          type="button"
+          (click)="openCreate()"
+          [disabled]="!availableMembers.length"
+        >
+          Registrar membresía
         </button>
       </div>
     </div>
