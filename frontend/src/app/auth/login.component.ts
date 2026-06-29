@@ -50,8 +50,7 @@ export class LoginComponent implements OnInit {
       }
 
       if (verified === 'false') {
-        this.error =
-          'El enlace de verificación no es válido o ya expiró.';
+        this.error = 'El enlace de verificación no es válido o ya expiró.';
         this.mode = 'login';
       }
     });
@@ -83,6 +82,26 @@ export class LoginComponent implements OnInit {
     return emailRegex.test(email.trim().toLowerCase());
   }
 
+  hasMinLength() {
+    return this.registerForm.password.length >= 8;
+  }
+
+  hasUpperCase() {
+    return /[A-Z]/.test(this.registerForm.password);
+  }
+
+  hasLowerCase() {
+    return /[a-z]/.test(this.registerForm.password);
+  }
+
+  hasNumber() {
+    return /\d/.test(this.registerForm.password);
+  }
+
+  hasSymbol() {
+    return /[@$!%*?&.#_-]/.test(this.registerForm.password);
+  }
+
   isStrongPassword(password: string) {
     const strongPasswordRegex =
       /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&.#_-])[A-Za-z\d@$!%*?&.#_-]{8,}$/;
@@ -96,6 +115,37 @@ export class LoginComponent implements OnInit {
       this.registerForm.confirmPassword.length > 0 &&
       this.registerForm.password === this.registerForm.confirmPassword
     );
+  }
+
+  passwordStrength(): 'empty' | 'weak' | 'medium' | 'strong' {
+    const password = this.registerForm.password;
+
+    if (!password) {
+      return 'empty';
+    }
+
+    let score = 0;
+
+    if (this.hasMinLength()) score++;
+    if (this.hasUpperCase()) score++;
+    if (this.hasLowerCase()) score++;
+    if (this.hasNumber()) score++;
+    if (this.hasSymbol()) score++;
+
+    if (score <= 2) return 'weak';
+    if (score <= 4) return 'medium';
+
+    return 'strong';
+  }
+
+  passwordStrengthText() {
+    const strength = this.passwordStrength();
+
+    if (strength === 'empty') return 'Sin evaluar';
+    if (strength === 'weak') return 'Débil';
+    if (strength === 'medium') return 'Media';
+
+    return 'Fuerte';
   }
 
   canLogin() {
