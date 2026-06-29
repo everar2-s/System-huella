@@ -1,5 +1,15 @@
-import { Body,Controller,Get,Post,Req,UseGuards,} from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  Get,
+  Post,
+  Query,
+  Req,
+  Res,
+  UseGuards,
+} from '@nestjs/common';
 import { Throttle, ThrottlerGuard } from '@nestjs/throttler';
+import type { Response } from 'express';
 
 import { AuthService } from './auth.service';
 import { JwtAuthGuard } from './jwt-auth.guard';
@@ -36,6 +46,27 @@ export class AuthController {
     },
   ) {
     return this.authService.login(body);
+  }
+
+  @Get('verify-email')
+  async verifyEmail(
+    @Query('token') token: string,
+    @Res() res: Response,
+  ) {
+    const frontendUrl =
+      process.env.FRONTEND_URL || 'http://localhost:4200';
+
+    try {
+      await this.authService.verifyEmail(token);
+
+      return res.redirect(
+        `${frontendUrl}/login?verified=true`,
+      );
+    } catch {
+      return res.redirect(
+        `${frontendUrl}/login?verified=false`,
+      );
+    }
   }
 
   @UseGuards(JwtAuthGuard)

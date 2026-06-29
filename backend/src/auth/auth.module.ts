@@ -8,11 +8,12 @@ import { AuthController } from './auth.controller';
 import { AuthService } from './auth.service';
 import { User } from './user.entity';
 import { JwtAuthGuard } from './jwt-auth.guard';
-
+import { MailModule } from '../mail/mail.module';
+import { MailService } from '../mail/mail.service';
 @Module({
   imports: [
     ConfigModule,
-
+    MailModule,
     TypeOrmModule.forFeature([User]),
 
     ThrottlerModule.forRoot({
@@ -45,7 +46,7 @@ import { JwtAuthGuard } from './jwt-auth.guard';
     }),
   ],
   controllers: [AuthController],
-  providers: [AuthService, JwtAuthGuard],
+  providers: [AuthService, JwtAuthGuard, MailService],
   exports: [AuthService, JwtAuthGuard, JwtModule],
 })
 export class AuthModule {}

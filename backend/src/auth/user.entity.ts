@@ -27,4 +27,13 @@ export class User {
 
   @CreateDateColumn()
   createdAt!: Date;
+
+  @Column({ default: false })
+emailVerified!: boolean;
+
+@Column({ type: 'varchar', nullable: true, unique: true })
+emailVerificationToken!: string | null;
+
+@Column({ type: 'timestamp', nullable: true })
+emailVerificationExpires!: Date | null;
 }
