@@ -283,7 +283,6 @@ input.error, select.error {
   font-weight: 700;
   letter-spacing: 0.01em;
   white-space: nowrap;
-  transition: background 0.15s, box-shadow 0.15s, transform 0.12s, border-color 0.15s, color 0.15s;
   position: relative;
   user-select: none;
 }
@@ -409,12 +408,9 @@ td { font-size: 13.5px; color: var(--text-2); }
 
 td:first-child {
   border-left: 3px solid transparent;
-  transition: border-color 0.12s;
   color: var(--text);
   font-weight: 600;
 }
-
-tbody tr { transition: background 0.12s; }
 
 tbody tr:hover { background: var(--primary-bg); }
 
@@ -546,7 +542,6 @@ td.num, th.num {
   font-weight: 600;
   color: var(--muted);
   cursor: pointer;
-  transition: background 0.15s, color 0.15s, box-shadow 0.15s;
   border: none;
   background: none;
   letter-spacing: 0.01em;
@@ -653,7 +648,6 @@ hr, .divider {
   white-space: nowrap;
   pointer-events: none;
   opacity: 0;
-  transition: opacity 0.15s;
   z-index: 100;
 }
 
@@ -683,4 +677,257 @@ hr, .divider {
   .card { padding: 16px 18px; }
 
   th, td { padding: 10px 11px; }
+}
+
+/* ══════════════════════════════════════════
+   ANIMACIONES — KEYFRAMES
+══════════════════════════════════════════ */
+
+@keyframes fadeInUp {
+  from { opacity: 0; transform: translateY(10px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+
+@keyframes scaleIn {
+  from { opacity: 0; transform: scale(0.94); }
+  to   { opacity: 1; transform: scale(1); }
+}
+
+@keyframes slideInLeft {
+  from { opacity: 0; transform: translateX(-14px); }
+  to   { opacity: 1; transform: translateX(0); }
+}
+
+@keyframes pulseDot {
+  0%, 100% { opacity: 0.65; transform: scale(1); }
+  50%      { opacity: 1;    transform: scale(1.25); }
+}
+
+@keyframes shimmer {
+  0%   { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+@keyframes growLine {
+  from { transform: scaleY(0); }
+  to   { transform: scaleY(1); }
+}
+
+@keyframes shake {
+  10%, 90% { transform: translateX(-1px); }
+  20%, 80% { transform: translateX(2px); }
+  30%, 50%, 70% { transform: translateX(-3px); }
+  40%, 60% { transform: translateX(3px); }
+}
+
+@keyframes checkPop {
+  0%   { transform: scale(0.5); opacity: 0; }
+  60%  { transform: scale(1.15); opacity: 1; }
+  100% { transform: scale(1); }
+}
+
+/* ══════════════════════════════════════════
+   ANIMACIONES — APLICACIÓN
+══════════════════════════════════════════ */
+
+/* Entrada de página y tarjetas */
+.page {
+  animation: fadeIn 0.4s ease both;
+}
+
+.card {
+  animation: fadeInUp 0.45s cubic-bezier(0.22, 1, 0.36, 1) both;
+  transition: box-shadow 0.25s ease, transform 0.25s ease;
+}
+
+/* Línea de acento de la card crece al aparecer */
+.card::before {
+  transform-origin: top;
+  animation: growLine 0.5s 0.1s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+/* Cascada en tarjetas hermanas dentro de un contenedor con .stagger */
+.stagger > .card:nth-child(1) { animation-delay: 0.03s; }
+.stagger > .card:nth-child(2) { animation-delay: 0.09s; }
+.stagger > .card:nth-child(3) { animation-delay: 0.15s; }
+.stagger > .card:nth-child(4) { animation-delay: 0.21s; }
+.stagger > .card:nth-child(5) { animation-delay: 0.27s; }
+.stagger > .card:nth-child(6) { animation-delay: 0.33s; }
+
+/* Tabla: filas entran en cascada */
+.table-wrap {
+  animation: fadeIn 0.4s ease both;
+}
+
+tbody tr {
+  animation: fadeInUp 0.35s cubic-bezier(0.22, 1, 0.36, 1) both;
+  transition: background 0.18s ease, transform 0.18s ease, box-shadow 0.18s ease;
+}
+
+tbody tr:nth-child(1)  { animation-delay: 0.02s; }
+tbody tr:nth-child(2)  { animation-delay: 0.05s; }
+tbody tr:nth-child(3)  { animation-delay: 0.08s; }
+tbody tr:nth-child(4)  { animation-delay: 0.11s; }
+tbody tr:nth-child(5)  { animation-delay: 0.14s; }
+tbody tr:nth-child(6)  { animation-delay: 0.17s; }
+tbody tr:nth-child(7)  { animation-delay: 0.20s; }
+tbody tr:nth-child(8)  { animation-delay: 0.23s; }
+tbody tr:nth-child(9)  { animation-delay: 0.26s; }
+tbody tr:nth-child(10) { animation-delay: 0.29s; }
+
+tbody tr:hover {
+  transform: translateX(2px);
+}
+
+td:first-child {
+  transition: border-color 0.18s ease, padding-left 0.18s ease;
+}
+
+/* Botones: realce más vivo */
+.btn {
+  transition: background 0.18s ease, box-shadow 0.18s ease,
+              transform 0.15s cubic-bezier(0.34, 1.56, 0.64, 1), border-color 0.18s ease, color 0.18s ease;
+}
+
+.btn:active:not(:disabled) {
+  transform: translateY(0) scale(0.97);
+}
+
+.btn-primary, .btn-accent {
+  overflow: hidden;
+}
+
+.btn-primary::after, .btn-accent::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(circle, rgba(255,255,255,0.35) 0%, transparent 70%);
+  opacity: 0;
+  transform: scale(0.4);
+  transition: opacity 0.4s ease, transform 0.4s ease;
+  pointer-events: none;
+}
+
+.btn-primary:active::after, .btn-accent:active::after {
+  opacity: 1;
+  transform: scale(1.6);
+  transition: opacity 0s, transform 0s;
+}
+
+/* Inputs: foco con más vida */
+input, select {
+  transition: border-color 0.2s ease, background 0.2s ease, box-shadow 0.25s cubic-bezier(0.22, 1, 0.36, 1), transform 0.15s ease;
+}
+
+input:focus, select:focus {
+  transform: translateY(-1px);
+}
+
+input.error, select.error {
+  animation: shake 0.4s ease;
+}
+
+/* Badges: punto pulsante en estados activos/de progreso */
+.badge.success::before,
+.badge.info::before,
+.badge.accent::before {
+  animation: pulseDot 1.8s ease-in-out infinite;
+}
+
+.badge {
+  animation: scaleIn 0.25s cubic-bezier(0.34, 1.56, 0.64, 1) both;
+}
+
+/* Alertas: entrada deslizante */
+.alert {
+  animation: slideInLeft 0.35s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+.alert.success i { animation: checkPop 0.4s cubic-bezier(0.34, 1.56, 0.64, 1) both; }
+
+/* Tabs: indicador suave */
+.tab {
+  transition: background 0.2s ease, color 0.2s ease, box-shadow 0.2s ease, transform 0.15s ease;
+}
+
+.tab:active { transform: scale(0.96); }
+
+.tab.active {
+  animation: scaleIn 0.2s cubic-bezier(0.34, 1.56, 0.64, 1) both;
+}
+
+/* KPI: número entra con leve "pop" */
+.kpi-value {
+  animation: fadeInUp 0.4s 0.05s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+.kpi-trend.up i, .kpi-trend.down i {
+  display: inline-block;
+  animation: fadeInUp 0.4s ease both;
+}
+
+/* Estado vacío: aparición suave */
+.empty {
+  animation: fadeIn 0.5s ease both;
+}
+
+.empty i {
+  animation: fadeInUp 0.5s 0.05s ease both;
+}
+
+/* Skeleton loading reutilizable: agrega class="skeleton" a cualquier bloque */
+.skeleton {
+  background: linear-gradient(
+    90deg,
+    var(--surface-2) 25%,
+    var(--surface-3) 50%,
+    var(--surface-2) 75%
+  );
+  background-size: 200% 100%;
+  animation: shimmer 1.4s ease-in-out infinite;
+  border-radius: var(--radius-sm);
+  color: transparent;
+  pointer-events: none;
+}
+
+/* Spinner reutilizable: <i class="spinner"></i> o <span class="spinner"></span> */
+.spinner {
+  display: inline-block;
+  width: 16px;
+  height: 16px;
+  border: 2px solid var(--border-2);
+  border-top-color: var(--primary);
+  border-radius: 50%;
+  animation: spin 0.7s linear infinite;
+}
+
+/* Tooltip: aparición con leve movimiento */
+[data-tip]::after {
+  transform: translateX(-50%) translateY(4px);
+  transition: opacity 0.18s ease, transform 0.18s ease;
+}
+
+[data-tip]:hover::after {
+  transform: translateX(-50%) translateY(0);
+}
+
+/* Respeto total a accesibilidad / preferencia de movimiento reducido */
+@media (prefers-reduced-motion: reduce) {
+  .page, .card, .card::before, .table-wrap, tbody tr, .btn, .btn-primary::after,
+  .btn-accent::after, input, select, .badge, .badge.success::before,
+  .badge.info::before, .badge.accent::before, .alert, .alert.success i, .tab,
+  .tab.active, .kpi-value, .kpi-trend.up i, .kpi-trend.down i, .empty, .empty i,
+  .skeleton, .spinner, [data-tip]::after {
+    animation: none !important;
+    transition-duration: 0.01ms !important;
+  }
 }
