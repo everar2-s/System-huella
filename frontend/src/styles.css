@@ -920,13 +920,776 @@ input.error, select.error {
   transform: translateX(-50%) translateY(0);
 }
 
-/* Respeto total a accesibilidad / preferencia de movimiento reducido */
+/* ══════════════════════════════════════════
+   CHECKBOX / RADIO PERSONALIZADOS
+══════════════════════════════════════════ */
+
+.checkbox, .radio {
+  display: inline-flex;
+  align-items: center;
+  gap: 9px;
+  cursor: pointer;
+  user-select: none;
+  font-size: 13.5px;
+  color: var(--text-2);
+  font-weight: 500;
+}
+
+.checkbox input, .radio input {
+  position: absolute;
+  opacity: 0;
+  width: 0;
+  height: 0;
+}
+
+.checkbox .box, .radio .box {
+  flex-shrink: 0;
+  width: 19px;
+  height: 19px;
+  border: 1.5px solid var(--border-2);
+  background: var(--surface);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  transition: border-color 0.18s ease, background 0.18s ease, box-shadow 0.18s ease, transform 0.12s ease;
+  position: relative;
+}
+
+.checkbox .box { border-radius: 5px; }
+.radio .box { border-radius: 50%; }
+
+.checkbox .box i {
+  font-size: 13px;
+  color: #fff;
+  opacity: 0;
+  transform: scale(0.4) rotate(-20deg);
+  transition: opacity 0.18s ease, transform 0.25s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+.radio .box::after {
+  content: "";
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  background: #fff;
+  opacity: 0;
+  transform: scale(0.3);
+  transition: opacity 0.18s ease, transform 0.25s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+.checkbox:hover .box, .radio:hover .box { border-color: var(--primary); }
+
+.checkbox input:checked ~ .box,
+.radio input:checked ~ .box {
+  background: var(--primary);
+  border-color: var(--primary);
+  transform: scale(1.04);
+}
+
+.checkbox input:checked ~ .box i { opacity: 1; transform: scale(1) rotate(0deg); }
+.radio input:checked ~ .box::after { opacity: 1; transform: scale(1); }
+
+.checkbox input:focus-visible ~ .box,
+.radio input:focus-visible ~ .box {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+/* ══════════════════════════════════════════
+   TOGGLE SWITCH
+══════════════════════════════════════════ */
+
+.switch {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  cursor: pointer;
+  user-select: none;
+}
+
+.switch input {
+  position: absolute;
+  opacity: 0;
+  width: 0;
+  height: 0;
+}
+
+.switch .track {
+  width: 40px;
+  height: 23px;
+  border-radius: 999px;
+  background: var(--border-2);
+  position: relative;
+  transition: background 0.25s ease;
+  flex-shrink: 0;
+}
+
+.switch .track::after {
+  content: "";
+  position: absolute;
+  top: 2.5px;
+  left: 2.5px;
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background: #fff;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.25);
+  transition: transform 0.25s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+.switch input:checked ~ .track {
+  background: var(--primary);
+}
+
+.switch input:checked ~ .track::after {
+  transform: translateX(17px);
+}
+
+.switch input:focus-visible ~ .track {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+.switch .label { font-size: 13.5px; color: var(--text-2); font-weight: 500; }
+
+/* ══════════════════════════════════════════
+   BOTÓN COPIAR (feedback de estado)
+══════════════════════════════════════════ */
+
+.btn-copy {
+  position: relative;
+}
+
+.btn-copy .icon-default,
+.btn-copy .icon-success {
+  transition: opacity 0.18s ease, transform 0.25s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+.btn-copy .icon-success {
+  position: absolute;
+  opacity: 0;
+  transform: scale(0.5);
+  color: var(--success);
+}
+
+.btn-copy.copied .icon-default {
+  opacity: 0;
+  transform: scale(0.5);
+}
+
+.btn-copy.copied .icon-success {
+  opacity: 1;
+  transform: scale(1);
+}
+
+/* ══════════════════════════════════════════
+   SIDEBAR / SUBMENÚS EXPANDIBLES
+══════════════════════════════════════════ */
+
+.nav-group .nav-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 10px 14px;
+  border-radius: var(--radius-sm);
+  font-size: 13.5px;
+  font-weight: 600;
+  color: var(--text-2);
+  cursor: pointer;
+  transition: background 0.18s ease, color 0.18s ease;
+}
+
+.nav-group .nav-item:hover { background: var(--surface-3); }
+
+.nav-group .nav-item .chevron {
+  transition: transform 0.25s cubic-bezier(0.22, 1, 0.36, 1);
+  font-size: 12px;
+  color: var(--muted);
+}
+
+.nav-group.open .nav-item .chevron { transform: rotate(90deg); }
+
+.nav-group .submenu {
+  display: grid;
+  grid-template-rows: 0fr;
+  transition: grid-template-rows 0.3s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.nav-group.open .submenu { grid-template-rows: 1fr; }
+
+.nav-group .submenu-inner { overflow: hidden; }
+
+.nav-group .submenu a {
+  display: block;
+  padding: 8px 14px 8px 34px;
+  font-size: 13px;
+  color: var(--muted);
+  border-radius: var(--radius-xs);
+  transition: background 0.15s ease, color 0.15s ease, padding-left 0.15s ease;
+}
+
+.nav-group .submenu a:hover {
+  background: var(--primary-bg);
+  color: var(--primary);
+  padding-left: 38px;
+  text-decoration: none;
+}
+
+.nav-group .submenu a.active {
+  color: var(--primary);
+  font-weight: 700;
+  background: var(--primary-bg);
+}
+
+/* ══════════════════════════════════════════
+   BREADCRUMBS
+══════════════════════════════════════════ */
+
+.breadcrumbs {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  font-size: 12.5px;
+  color: var(--muted);
+  animation: fadeIn 0.3s ease both;
+}
+
+.breadcrumbs a {
+  color: var(--muted);
+  font-weight: 600;
+  transition: color 0.15s ease;
+}
+
+.breadcrumbs a:hover { color: var(--primary); text-decoration: none; }
+
+.breadcrumbs .sep {
+  font-size: 10px;
+  opacity: 0.5;
+}
+
+.breadcrumbs .current {
+  color: var(--text);
+  font-weight: 700;
+}
+
+/* ══════════════════════════════════════════
+   STEPPER / PROGRESO MULTI-PASO
+══════════════════════════════════════════ */
+
+.stepper {
+  display: flex;
+  align-items: center;
+  width: 100%;
+}
+
+.stepper .step {
+  display: flex;
+  align-items: center;
+  flex: 1;
+}
+
+.stepper .step:last-child { flex: 0 0 auto; }
+
+.stepper .dot {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  background: var(--surface-3);
+  border: 2px solid var(--border-2);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 12px;
+  font-weight: 800;
+  color: var(--muted);
+  flex-shrink: 0;
+  transition: background 0.3s ease, border-color 0.3s ease, color 0.3s ease, transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+  position: relative;
+  z-index: 1;
+}
+
+.stepper .step.done .dot {
+  background: var(--primary);
+  border-color: var(--primary);
+  color: #fff;
+  transform: scale(1.05);
+}
+
+.stepper .step.active .dot {
+  border-color: var(--primary);
+  color: var(--primary);
+  box-shadow: 0 0 0 4px var(--primary-bg);
+}
+
+.stepper .step .label {
+  margin-left: 8px;
+  font-size: 12.5px;
+  font-weight: 700;
+  color: var(--muted);
+  white-space: nowrap;
+  transition: color 0.3s ease;
+}
+
+.stepper .step.active .label,
+.stepper .step.done .label { color: var(--text); }
+
+.stepper .line {
+  flex: 1;
+  height: 2px;
+  background: var(--border-2);
+  margin: 0 10px;
+  position: relative;
+  overflow: hidden;
+}
+
+.stepper .line::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: var(--primary);
+  transform: scaleX(0);
+  transform-origin: left;
+  transition: transform 0.4s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.stepper .step.done .line::after { transform: scaleX(1); }
+
+/* ══════════════════════════════════════════
+   SCROLLBAR PERSONALIZADA
+══════════════════════════════════════════ */
+
+* {
+  scrollbar-width: thin;
+  scrollbar-color: var(--border-2) transparent;
+}
+
+*::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+
+*::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+*::-webkit-scrollbar-thumb {
+  background: var(--border-2);
+  border-radius: 999px;
+  border: 2px solid var(--bg);
+  transition: background 0.2s ease;
+}
+
+*::-webkit-scrollbar-thumb:hover {
+  background: var(--primary);
+}
+
+/* ══════════════════════════════════════════
+   TOAST / NOTIFICACIÓN FLOTANTE
+══════════════════════════════════════════ */
+
+.toast-stack {
+  position: fixed;
+  top: 18px;
+  right: 18px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  z-index: 1000;
+  pointer-events: none;
+}
+
+.toast {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  min-width: 280px;
+  max-width: 360px;
+  padding: 13px 16px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-left: 3px solid var(--primary);
+  border-radius: var(--radius-sm);
+  box-shadow: var(--shadow-lg);
+  font-size: 13px;
+  color: var(--text-2);
+  pointer-events: auto;
+  animation: toastIn 0.35s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+.toast.success { border-left-color: var(--success); }
+.toast.error   { border-left-color: var(--danger); }
+.toast.warning { border-left-color: var(--warning); }
+
+.toast.leaving {
+  animation: toastOut 0.3s cubic-bezier(0.4, 0, 1, 1) both;
+}
+
+.toast i { font-size: 16px; margin-top: 1px; }
+.toast strong { color: var(--text); display: block; margin-bottom: 2px; }
+
+.toast .close {
+  margin-left: auto;
+  color: var(--muted);
+  cursor: pointer;
+  font-size: 14px;
+  flex-shrink: 0;
+  transition: color 0.15s ease;
+}
+
+.toast .close:hover { color: var(--text); }
+
+@keyframes toastIn {
+  from { opacity: 0; transform: translateX(40px) scale(0.95); }
+  to   { opacity: 1; transform: translateX(0) scale(1); }
+}
+
+@keyframes toastOut {
+  from { opacity: 1; transform: translateX(0) scale(1); max-height: 200px; }
+  to   { opacity: 0; transform: translateX(40px) scale(0.95); max-height: 0; margin: 0; padding-top: 0; padding-bottom: 0; }
+}
+
+/* ══════════════════════════════════════════
+   MODAL / DIALOG
+══════════════════════════════════════════ */
+
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(17, 24, 39, 0.45);
+  backdrop-filter: blur(2px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 999;
+  animation: fadeIn 0.2s ease both;
+}
+
+.modal-overlay.leaving { animation: fadeIn 0.2s ease reverse both; }
+
+.modal {
+  background: var(--surface);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-xl);
+  width: 100%;
+  max-width: 480px;
+  max-height: 86vh;
+  overflow: auto;
+  animation: modalIn 0.3s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+.modal-overlay.leaving .modal {
+  animation: modalIn 0.2s cubic-bezier(0.4, 0, 1, 1) reverse both;
+}
+
+@keyframes modalIn {
+  from { opacity: 0; transform: scale(0.92) translateY(12px); }
+  to   { opacity: 1; transform: scale(1) translateY(0); }
+}
+
+.modal-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 18px 22px;
+  border-bottom: 1px solid var(--border);
+}
+
+.modal-header h3 { font-size: 16px; font-weight: 800; color: var(--text); }
+
+.modal-body { padding: 20px 22px; }
+
+.modal-footer {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  padding: 16px 22px;
+  border-top: 1px solid var(--border);
+  background: var(--surface-2);
+}
+
+/* ══════════════════════════════════════════
+   DROPDOWN PERSONALIZADO
+══════════════════════════════════════════ */
+
+.dropdown { position: relative; }
+
+.dropdown-trigger {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.dropdown-trigger i.chevron {
+  transition: transform 0.25s cubic-bezier(0.22, 1, 0.36, 1);
+  font-size: 12px;
+  color: var(--muted);
+}
+
+.dropdown.open .dropdown-trigger i.chevron { transform: rotate(180deg); }
+
+.dropdown-menu {
+  position: absolute;
+  top: calc(100% + 6px);
+  left: 0;
+  right: 0;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  box-shadow: var(--shadow-lg);
+  padding: 6px;
+  z-index: 50;
+  transform-origin: top;
+  opacity: 0;
+  transform: scaleY(0.9) translateY(-4px);
+  pointer-events: none;
+  transition: opacity 0.18s ease, transform 0.2s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.dropdown.open .dropdown-menu {
+  opacity: 1;
+  transform: scaleY(1) translateY(0);
+  pointer-events: auto;
+}
+
+.dropdown-menu .option {
+  padding: 9px 12px;
+  border-radius: var(--radius-xs);
+  font-size: 13.5px;
+  color: var(--text-2);
+  cursor: pointer;
+  transition: background 0.13s ease, color 0.13s ease, padding-left 0.13s ease;
+}
+
+.dropdown-menu .option:hover {
+  background: var(--primary-bg);
+  color: var(--primary);
+  padding-left: 16px;
+}
+
+.dropdown-menu .option.selected {
+  color: var(--primary);
+  font-weight: 700;
+  background: var(--primary-bg);
+}
+
+/* ══════════════════════════════════════════
+   ESTADO "GUARDADO" EN FORMULARIOS
+══════════════════════════════════════════ */
+
+.save-indicator {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12.5px;
+  font-weight: 700;
+  color: var(--success);
+  opacity: 0;
+  transform: translateX(-6px);
+  transition: opacity 0.25s ease, transform 0.25s ease;
+}
+
+.save-indicator.show {
+  opacity: 1;
+  transform: translateX(0);
+}
+
+.save-indicator i { animation: checkPop 0.4s cubic-bezier(0.34, 1.56, 0.64, 1) both; }
+
+/* ══════════════════════════════════════════
+   BARRAS DE PROGRESO
+══════════════════════════════════════════ */
+
+.progress {
+  width: 100%;
+  height: 9px;
+  background: var(--surface-3);
+  border-radius: 999px;
+  overflow: hidden;
+}
+
+.progress-bar {
+  height: 100%;
+  background: linear-gradient(90deg, var(--primary), var(--accent));
+  border-radius: 999px;
+  width: 0%;
+  transition: width 0.7s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.progress-bar.indeterminate {
+  width: 40% !important;
+  animation: indeterminate 1.3s ease-in-out infinite;
+}
+
+@keyframes indeterminate {
+  0%   { transform: translateX(-100%); }
+  100% { transform: translateX(250%); }
+}
+
+/* ══════════════════════════════════════════
+   SPARKLINE (SVG con dibujo de línea)
+══════════════════════════════════════════ */
+
+.sparkline path {
+  fill: none;
+  stroke: var(--primary);
+  stroke-width: 2;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  stroke-dasharray: 400;
+  stroke-dashoffset: 400;
+  animation: drawLine 1.1s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+}
+
+.sparkline circle {
+  opacity: 0;
+  animation: fadeIn 0.3s 1s ease forwards;
+}
+
+@keyframes drawLine {
+  to { stroke-dashoffset: 0; }
+}
+
+/* ══════════════════════════════════════════
+   PAGINACIÓN
+══════════════════════════════════════════ */
+
+.pagination {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.pagination button {
+  min-width: 32px;
+  height: 32px;
+  border-radius: var(--radius-xs);
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--text-2);
+  transition: background 0.15s ease, color 0.15s ease, transform 0.15s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+.pagination button:hover:not(:disabled) { background: var(--surface-3); }
+.pagination button:disabled { opacity: 0.35; cursor: not-allowed; }
+
+.pagination button.active {
+  background: var(--primary);
+  color: #fff;
+  animation: scaleIn 0.2s cubic-bezier(0.34, 1.56, 0.64, 1) both;
+}
+
+.pagination-content {
+  animation: fadeIn 0.25s ease both;
+}
+
+/* ══════════════════════════════════════════
+   GLOW EN HOVER DE FILAS
+══════════════════════════════════════════ */
+
+tbody tr {
+  position: relative;
+}
+
+tbody tr::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  box-shadow: inset 0 0 0 0 var(--accent-glow);
+  transition: box-shadow 0.25s ease;
+  pointer-events: none;
+}
+
+tbody tr:hover::after {
+  box-shadow: inset 3px 0 0 0 var(--accent);
+}
+
+/* ══════════════════════════════════════════
+   DRAG HANDLE (listas reordenables)
+══════════════════════════════════════════ */
+
+.drag-handle {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 22px;
+  height: 22px;
+  color: var(--muted);
+  cursor: grab;
+  border-radius: 5px;
+  transition: background 0.15s ease, color 0.15s ease;
+}
+
+.drag-handle:hover { background: var(--surface-3); color: var(--text-2); }
+.drag-handle:active { cursor: grabbing; }
+
+.draggable-item {
+  transition: transform 0.2s ease, box-shadow 0.2s ease, opacity 0.2s ease;
+}
+
+.draggable-item.dragging {
+  opacity: 0.6;
+  box-shadow: var(--shadow-lg);
+  transform: scale(1.02);
+  cursor: grabbing;
+}
+
+.draggable-item.drop-target {
+  border-top: 2px solid var(--primary);
+}
+
+/* ══════════════════════════════════════════
+   BARRA DE CARGA GLOBAL (estilo top-bar)
+══════════════════════════════════════════ */
+
+.page-loader {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 3px;
+  background: transparent;
+  z-index: 2000;
+  overflow: hidden;
+}
+
+.page-loader::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  height: 100%;
+  width: 30%;
+  background: linear-gradient(90deg, var(--accent), var(--primary));
+  border-radius: 0 4px 4px 0;
+  animation: pageLoad 1.1s ease-in-out infinite;
+}
+
+@keyframes pageLoad {
+  0%   { left: -30%; }
+  60%  { left: 100%; }
+  100% { left: 100%; }
+}
+
+/* ══════════════════════════════════════════
+   ACCESIBILIDAD — RESPETO A MOVIMIENTO REDUCIDO
+══════════════════════════════════════════ */
+
 @media (prefers-reduced-motion: reduce) {
-  .page, .card, .card::before, .table-wrap, tbody tr, .btn, .btn-primary::after,
-  .btn-accent::after, input, select, .badge, .badge.success::before,
-  .badge.info::before, .badge.accent::before, .alert, .alert.success i, .tab,
-  .tab.active, .kpi-value, .kpi-trend.up i, .kpi-trend.down i, .empty, .empty i,
-  .skeleton, .spinner, [data-tip]::after {
+  .page, .card, .card::before, .table-wrap, tbody tr, tbody tr::after, .btn,
+  .btn-primary::after, .btn-accent::after, input, select, .badge,
+  .badge.success::before, .badge.info::before, .badge.accent::before, .alert,
+  .alert.success i, .tab, .tab.active, .kpi-value, .kpi-trend.up i,
+  .kpi-trend.down i, .empty, .empty i, .skeleton, .spinner, [data-tip]::after,
+  .checkbox .box, .radio .box, .checkbox .box i, .radio .box::after,
+  .switch .track, .switch .track::after, .btn-copy .icon-default,
+  .btn-copy .icon-success, .nav-group .nav-item .chevron, .nav-group .submenu,
+  .breadcrumbs, .stepper .dot, .stepper .label, .stepper .line::after,
+  .toast, .modal-overlay, .modal, .dropdown-trigger i.chevron, .dropdown-menu,
+  .dropdown-menu .option, .save-indicator, .save-indicator i, .progress-bar,
+  .progress-bar.indeterminate, .sparkline path, .sparkline circle,
+  .pagination button, .pagination-content, .draggable-item, .page-loader::before {
     animation: none !important;
     transition-duration: 0.01ms !important;
   }
