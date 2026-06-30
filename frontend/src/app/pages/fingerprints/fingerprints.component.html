@@ -2,10 +2,13 @@
   <div class="page-header">
     <div>
       <h2>Huellas</h2>
-      <p>Relaciona un socio con su fingerprintId. Regla recomendada: memberId igual a fingerprintId.</p>
+      <p>
+        Relaciona un socio con su fingerprintId. Regla recomendada: memberId
+        igual a fingerprintId.
+      </p>
     </div>
 
-   <!--<button class="btn btn-secondary" type="button" (click)="loadData()">Actualizar</button>-->
+    <!--<button class="btn btn-secondary" type="button" (click)="loadData()">Actualizar</button>-->
   </div>
 
   <div *ngIf="error" class="alert error">{{ error }}</div>
@@ -15,7 +18,12 @@
     <form class="form-grid cols-5" (ngSubmit)="createFingerprint()">
       <div class="field">
         <label>Socio</label>
-        <select name="memberId" [(ngModel)]="form.memberId" (change)="syncFingerprintId()" required>
+        <select
+          name="memberId"
+          [(ngModel)]="form.memberId"
+          (change)="syncFingerprintId()"
+          required
+        >
           <option *ngFor="let member of members" [ngValue]="member.id">
             {{ member.id }} - {{ member.fullName }}
           </option>
@@ -24,7 +32,12 @@
 
       <div class="field">
         <label>Fingerprint ID</label>
-        <input type="number" name="fingerprintId" [(ngModel)]="form.fingerprintId" required />
+        <input
+          type="number"
+          name="fingerprintId"
+          [(ngModel)]="form.fingerprintId"
+          required
+        />
       </div>
 
       <div class="field">
@@ -32,18 +45,35 @@
         <input name="fingerName" [(ngModel)]="form.fingerName" required />
       </div>
 
-      <button class="btn btn-secondary" type="button" (click)="syncFingerprintId()">
+      <button
+        class="btn btn-secondary"
+        type="button"
+        (click)="syncFingerprintId()"
+      >
         Usar ID del socio
       </button>
 
-      <button class="btn btn-primary" type="submit" [disabled]="saving || !members.length">
+      <button
+        class="btn btn-primary"
+        type="submit"
+        [disabled]="saving || !members.length"
+      >
         {{ saving ? 'Guardando...' : 'Registrar huella' }}
       </button>
     </form>
   </article>
 
   <article class="card">
-    <div class="table-wrap" *ngIf="fingerprints.length; else emptyFingerprints">
+    <div class="section-head">
+      <div>
+        <h3>Listado de huellas</h3>
+        <span>
+          {{ sortedFingerprints.length }} registro(s)
+        </span>
+      </div>
+    </div>
+
+    <div class="table-wrap" *ngIf="sortedFingerprints.length; else emptyFingerprints">
       <table>
         <thead>
           <tr>
@@ -55,23 +85,68 @@
             <th>Acción</th>
           </tr>
         </thead>
+
         <tbody>
-          <tr *ngFor="let fingerprint of fingerprints">
+          <tr *ngFor="let fingerprint of paginatedFingerprints">
             <td>{{ fingerprint.id }}</td>
             <td>{{ fingerprint.member?.fullName || fingerprint.memberId }}</td>
             <td>{{ fingerprint.fingerprintId }}</td>
             <td>{{ fingerprint.fingerName }}</td>
             <td>
-              <span class="badge" [ngClass]="fingerprint.active ? 'success' : 'danger'">
+              <span
+                class="badge"
+                [ngClass]="fingerprint.active ? 'success' : 'danger'"
+              >
                 {{ fingerprint.active ? 'activa' : 'inactiva' }}
               </span>
             </td>
             <td>
-              <button class="btn btn-danger" type="button" (click)="deleteFingerprint(fingerprint.id)">Eliminar</button>
+              <button
+                class="btn btn-danger"
+                type="button"
+                (click)="deleteFingerprint(fingerprint.id)"
+              >
+                Eliminar
+              </button>
             </td>
           </tr>
         </tbody>
       </table>
+    </div>
+
+    <div class="pagination" *ngIf="sortedFingerprints.length > itemsPerPage">
+      <button
+        class="page-btn"
+        type="button"
+        (click)="previousPage()"
+        [disabled]="safeCurrentPage === 1"
+      >
+        Anterior
+      </button>
+
+      <button
+        class="page-number"
+        type="button"
+        *ngFor="let page of pages"
+        (click)="goToPage(page)"
+        [class.active]="safeCurrentPage === page"
+      >
+        {{ page }}
+      </button>
+
+      <button
+        class="page-btn"
+        type="button"
+        (click)="nextPage()"
+        [disabled]="safeCurrentPage === totalPages"
+      >
+        Siguiente
+      </button>
+    </div>
+
+    <div class="pagination-info" *ngIf="sortedFingerprints.length">
+      Mostrando {{ startItem }} - {{ endItem }} de
+      {{ sortedFingerprints.length }} huella(s)
     </div>
 
     <ng-template #emptyFingerprints>

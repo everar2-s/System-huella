@@ -26,6 +26,9 @@ export class AttendanceComponent implements OnInit {
   filterType = '';
   filterResult = '';
 
+  currentPage = 1;
+  itemsPerPage = 5;
+
   ngOnInit() {
     this.loadAttendance();
   }
@@ -75,6 +78,92 @@ export class AttendanceComponent implements OnInit {
       });
   }
 
+  get totalPages() {
+    return Math.ceil(this.filteredAttendance.length / this.itemsPerPage);
+  }
+
+  get safeCurrentPage() {
+    if (this.totalPages === 0) {
+      return 1;
+    }
+
+    return Math.min(Math.max(this.currentPage, 1), this.totalPages);
+  }
+
+  get paginatedAttendance() {
+    const page = this.safeCurrentPage;
+    const start = (page - 1) * this.itemsPerPage;
+    const end = start + this.itemsPerPage;
+
+    return this.filteredAttendance.slice(start, end);
+  }
+
+  get pages() {
+    const total = this.totalPages;
+    const maxButtons = 5;
+
+    if (total <= maxButtons) {
+      return Array.from({ length: total }, (_, index) => index + 1);
+    }
+
+    let start = Math.max(
+      1,
+      this.safeCurrentPage - Math.floor(maxButtons / 2),
+    );
+
+    let end = start + maxButtons - 1;
+
+    if (end > total) {
+      end = total;
+      start = Math.max(1, end - maxButtons + 1);
+    }
+
+    return Array.from(
+      { length: end - start + 1 },
+      (_, index) => start + index,
+    );
+  }
+
+  get startItem() {
+    if (!this.filteredAttendance.length) {
+      return 0;
+    }
+
+    return (this.safeCurrentPage - 1) * this.itemsPerPage + 1;
+  }
+
+  get endItem() {
+    const end = this.safeCurrentPage * this.itemsPerPage;
+
+    return end > this.filteredAttendance.length
+      ? this.filteredAttendance.length
+      : end;
+  }
+
+  resetPage() {
+    this.currentPage = 1;
+  }
+
+  goToPage(page: number) {
+    if (page < 1 || page > this.totalPages) {
+      return;
+    }
+
+    this.currentPage = page;
+  }
+
+  nextPage() {
+    if (this.currentPage < this.totalPages) {
+      this.currentPage++;
+    }
+  }
+
+  previousPage() {
+    if (this.currentPage > 1) {
+      this.currentPage--;
+    }
+  }
+
   loadAttendance() {
     this.loading = true;
     this.error = '';
@@ -92,6 +181,7 @@ export class AttendanceComponent implements OnInit {
           return a.id - b.id;
         });
 
+        this.currentPage = 1;
         this.loading = false;
       },
       error: (error) => {
@@ -106,6 +196,7 @@ export class AttendanceComponent implements OnInit {
     this.filterDate = '';
     this.filterType = '';
     this.filterResult = '';
+    this.currentPage = 1;
   }
 
   typeClass(type: string) {

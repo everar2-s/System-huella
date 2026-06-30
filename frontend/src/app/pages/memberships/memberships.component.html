@@ -23,13 +23,18 @@
           type="text"
           name="filterSearch"
           [(ngModel)]="filterSearch"
+          (ngModelChange)="resetPage()"
           placeholder="ID o nombre del socio"
         />
       </div>
 
       <div class="field">
         <label>Tipo</label>
-        <select name="filterType" [(ngModel)]="filterType">
+        <select
+          name="filterType"
+          [(ngModel)]="filterType"
+          (ngModelChange)="resetPage()"
+        >
           <option value="">Todos</option>
           <option value="diaria">Diaria</option>
           <option value="semanal">Semanal</option>
@@ -40,7 +45,11 @@
 
       <div class="field">
         <label>Estatus</label>
-        <select name="filterStatus" [(ngModel)]="filterStatus">
+        <select
+          name="filterStatus"
+          [(ngModel)]="filterStatus"
+          (ngModelChange)="resetPage()"
+        >
           <option value="">Todos</option>
           <option value="activa">Activa</option>
           <option value="suspendida">Suspendida</option>
@@ -95,7 +104,7 @@
         </thead>
 
         <tbody>
-          <tr *ngFor="let membership of filteredMemberships">
+          <tr *ngFor="let membership of paginatedMemberships">
             <td>#{{ membership.id }}</td>
             <td>{{ membership.member?.fullName || membership.memberId }}</td>
             <td>{{ membership.type }}</td>
@@ -131,6 +140,41 @@
           </tr>
         </tbody>
       </table>
+    </div>
+
+    <div class="pagination" *ngIf="filteredMemberships.length > itemsPerPage">
+      <button
+        class="page-btn"
+        type="button"
+        (click)="previousPage()"
+        [disabled]="safeCurrentPage === 1"
+      >
+        Anterior
+      </button>
+
+      <button
+        class="page-number"
+        type="button"
+        *ngFor="let page of pages"
+        (click)="goToPage(page)"
+        [class.active]="safeCurrentPage === page"
+      >
+        {{ page }}
+      </button>
+
+      <button
+        class="page-btn"
+        type="button"
+        (click)="nextPage()"
+        [disabled]="safeCurrentPage === totalPages"
+      >
+        Siguiente
+      </button>
+    </div>
+
+    <div class="pagination-info" *ngIf="filteredMemberships.length">
+      Mostrando {{ startItem }} - {{ endItem }} de
+      {{ filteredMemberships.length }} membresía(s)
     </div>
 
     <ng-template #emptyMemberships>

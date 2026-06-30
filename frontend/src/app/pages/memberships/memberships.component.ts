@@ -32,6 +32,9 @@ export class MembershipsComponent implements OnInit {
   filterType = '';
   filterStatus = '';
 
+  currentPage = 1;
+  itemsPerPage = 5;
+
   form = this.getEmptyForm();
 
   ngOnInit() {
@@ -76,6 +79,91 @@ export class MembershipsComponent implements OnInit {
       });
   }
 
+  get totalPages() {
+    return Math.ceil(this.filteredMemberships.length / this.itemsPerPage);
+  }
+
+  get safeCurrentPage() {
+    if (this.totalPages === 0) {
+      return 1;
+    }
+
+    return Math.min(Math.max(this.currentPage, 1), this.totalPages);
+  }
+
+  get paginatedMemberships() {
+    const start = (this.safeCurrentPage - 1) * this.itemsPerPage;
+    const end = start + this.itemsPerPage;
+
+    return this.filteredMemberships.slice(start, end);
+  }
+
+  get pages() {
+    const total = this.totalPages;
+    const maxButtons = 5;
+
+    if (total <= maxButtons) {
+      return Array.from({ length: total }, (_, index) => index + 1);
+    }
+
+    let start = Math.max(
+      1,
+      this.safeCurrentPage - Math.floor(maxButtons / 2),
+    );
+
+    let end = start + maxButtons - 1;
+
+    if (end > total) {
+      end = total;
+      start = Math.max(1, end - maxButtons + 1);
+    }
+
+    return Array.from(
+      { length: end - start + 1 },
+      (_, index) => start + index,
+    );
+  }
+
+  get startItem() {
+    if (!this.filteredMemberships.length) {
+      return 0;
+    }
+
+    return (this.safeCurrentPage - 1) * this.itemsPerPage + 1;
+  }
+
+  get endItem() {
+    const end = this.safeCurrentPage * this.itemsPerPage;
+
+    return end > this.filteredMemberships.length
+      ? this.filteredMemberships.length
+      : end;
+  }
+
+  resetPage() {
+    this.currentPage = 1;
+  }
+
+  goToPage(page: number) {
+    if (page < 1 || page > this.totalPages) {
+      return;
+    }
+
+    this.currentPage = page;
+  }
+
+  nextPage() {
+    if (this.currentPage < this.totalPages) {
+      this.currentPage++;
+    }
+  }
+
+  previousPage() {
+    if (this.currentPage > 1) {
+      this.currentPage--;
+    }
+  }
+
   loadData() {
     this.loading = true;
     this.error = '';
@@ -87,6 +175,7 @@ export class MembershipsComponent implements OnInit {
       next: ({ members, memberships }) => {
         this.members = members;
         this.memberships = memberships.sort((a, b) => a.id - b.id);
+        this.currentPage = 1;
         this.loading = false;
       },
       error: (error) => {
@@ -100,6 +189,7 @@ export class MembershipsComponent implements OnInit {
     this.filterSearch = '';
     this.filterType = '';
     this.filterStatus = '';
+    this.currentPage = 1;
   }
 
   get availableMembers() {

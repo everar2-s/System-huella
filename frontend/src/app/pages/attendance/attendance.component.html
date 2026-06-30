@@ -6,9 +6,11 @@
     </div>
 
     <div class="page-actions">
-    <!--  <button class="btn btn-light" type="button" (click)="loadAttendance()">
+      <!--
+      <button class="btn btn-light" type="button" (click)="loadAttendance()">
         Actualizar
-      </button> -->
+      </button>
+      -->
     </div>
   </div>
 
@@ -18,7 +20,6 @@
     <div class="section-head">
       <div>
         <h3>Filtros</h3>
-       <!--<span>Busca asistencias por socio, fecha, tipo o resultado.</span>-->
       </div>
     </div>
 
@@ -29,6 +30,7 @@
           type="text"
           name="filterSocio"
           [(ngModel)]="filterSocio"
+          (ngModelChange)="resetPage()"
           placeholder="Nombre o ID del socio"
         />
       </div>
@@ -39,12 +41,17 @@
           type="date"
           name="filterDate"
           [(ngModel)]="filterDate"
+          (ngModelChange)="resetPage()"
         />
       </div>
 
       <div class="field">
         <label>Tipo</label>
-        <select name="filterType" [(ngModel)]="filterType">
+        <select
+          name="filterType"
+          [(ngModel)]="filterType"
+          (ngModelChange)="resetPage()"
+        >
           <option value="">Todos</option>
           <option value="entrada">Entrada</option>
           <option value="salida">Salida</option>
@@ -53,7 +60,11 @@
 
       <div class="field">
         <label>Resultado</label>
-        <select name="filterResult" [(ngModel)]="filterResult">
+        <select
+          name="filterResult"
+          [(ngModel)]="filterResult"
+          (ngModelChange)="resetPage()"
+        >
           <option value="">Todos</option>
           <option value="permitido">Permitido</option>
           <option value="denegado">Denegado</option>
@@ -94,7 +105,7 @@
         </thead>
 
         <tbody>
-          <tr *ngFor="let log of filteredAttendance">
+          <tr *ngFor="let log of paginatedAttendance">
             <td>#{{ log.id }}</td>
 
             <td>
@@ -124,6 +135,41 @@
           </tr>
         </tbody>
       </table>
+    </div>
+
+    <div class="pagination" *ngIf="filteredAttendance.length > itemsPerPage">
+      <button
+        class="page-btn"
+        type="button"
+        (click)="previousPage()"
+        [disabled]="safeCurrentPage === 1"
+      >
+        Anterior
+      </button>
+
+      <button
+        class="page-number"
+        type="button"
+        *ngFor="let page of pages"
+        (click)="goToPage(page)"
+        [class.active]="safeCurrentPage === page"
+      >
+        {{ page }}
+      </button>
+
+      <button
+        class="page-btn"
+        type="button"
+        (click)="nextPage()"
+        [disabled]="safeCurrentPage === totalPages"
+      >
+        Siguiente
+      </button>
+    </div>
+
+    <div class="pagination-info" *ngIf="filteredAttendance.length">
+      Mostrando {{ startItem }} - {{ endItem }} de
+      {{ filteredAttendance.length }} asistencia(s)
     </div>
 
     <ng-template #emptyLogs>
