@@ -21,6 +21,7 @@
           type="text"
           name="filterId"
           [(ngModel)]="filterId"
+          (ngModelChange)="resetPage()"
           placeholder="Ejemplo: 1"
         />
       </div>
@@ -31,13 +32,18 @@
           type="text"
           name="filterSocio"
           [(ngModel)]="filterSocio"
+          (ngModelChange)="resetPage()"
           placeholder="Nombre del socio"
         />
       </div>
 
       <div class="field filter-status">
         <label>Status</label>
-        <select name="filterStatus" [(ngModel)]="filterStatus">
+        <select
+          name="filterStatus"
+          [(ngModel)]="filterStatus"
+          (ngModelChange)="resetPage()"
+        >
           <option value="">Todos</option>
           <option value="activo">Activo</option>
           <option value="pendiente_huella">Pendiente de huella</option>
@@ -83,7 +89,7 @@
         </thead>
 
         <tbody>
-          <tr *ngFor="let member of filteredMembers">
+          <tr *ngFor="let member of paginatedMembers">
             <td>#{{ member.id }}</td>
             <td>{{ member.fullName }}</td>
             <td>{{ member.phone || 'Sin teléfono' }}</td>
@@ -125,6 +131,41 @@
           </tr>
         </tbody>
       </table>
+    </div>
+
+    <div class="pagination" *ngIf="filteredMembers.length > itemsPerPage">
+      <button
+        class="page-btn"
+        type="button"
+        (click)="previousPage()"
+        [disabled]="safeCurrentPage === 1"
+      >
+        Anterior
+      </button>
+
+      <button
+        class="page-number"
+        type="button"
+        *ngFor="let page of pages"
+        (click)="goToPage(page)"
+        [class.active]="safeCurrentPage === page"
+      >
+        {{ page }}
+      </button>
+
+      <button
+        class="page-btn"
+        type="button"
+        (click)="nextPage()"
+        [disabled]="safeCurrentPage === totalPages"
+      >
+        Siguiente
+      </button>
+    </div>
+
+    <div class="pagination-info" *ngIf="filteredMembers.length">
+      Mostrando {{ startItem }} - {{ endItem }} de
+      {{ filteredMembers.length }} socio(s)
     </div>
 
     <ng-template #emptyMembers>

@@ -15,7 +15,7 @@
 ========================= */
 
 .sidebar {
-  min-height: 100vh;
+  height: 100vh;
   background: var(--surface);
   border-right: 1px solid var(--border);
   padding: 24px;
@@ -24,7 +24,7 @@
   gap: 26px;
   position: sticky;
   top: 0;
-  overflow: visible;
+  overflow: hidden;
   transition: padding 0.25s ease;
 }
 
@@ -65,6 +65,7 @@
   display: flex;
   align-items: center;
   gap: 14px;
+  flex-shrink: 0;
 }
 
 .brand-icon {
@@ -106,6 +107,23 @@
   display: flex;
   flex-direction: column;
   gap: 8px;
+  flex: 1;
+  overflow-y: auto;
+  overflow-x: hidden;
+  padding-right: 2px;
+}
+
+.menu::-webkit-scrollbar {
+  width: 6px;
+}
+
+.menu::-webkit-scrollbar-thumb {
+  background: rgba(31, 122, 90, 0.2);
+  border-radius: 999px;
+}
+
+.menu::-webkit-scrollbar-track {
+  background: transparent;
 }
 
 .menu a {
@@ -120,6 +138,7 @@
   font-weight: 700;
   text-decoration: none;
   transition: background 0.2s ease, color 0.2s ease, transform 0.2s ease;
+  flex-shrink: 0;
 }
 
 .menu a i {
@@ -163,6 +182,7 @@
   gap: 10px;
   cursor: pointer;
   transition: background 0.2s ease, transform 0.2s ease;
+  flex-shrink: 0;
 }
 
 .logout i {
@@ -200,6 +220,7 @@
 
 .layout.sidebar-collapsed .menu {
   align-items: center;
+  width: 100%;
 }
 
 .layout.sidebar-collapsed .menu a {
@@ -230,8 +251,10 @@
 
 .main {
   min-width: 0;
+  min-height: 100vh;
   display: flex;
   flex-direction: column;
+  overflow-x: hidden;
 }
 
 .topbar {
@@ -244,6 +267,9 @@
   justify-content: space-between;
   align-items: center;
   gap: 18px;
+  position: sticky;
+  top: 0;
+  z-index: 20;
 }
 
 .topbar-title {
@@ -328,6 +354,7 @@
 
 .content {
   padding: 30px;
+  min-width: 0;
 }
 
 /* =========================
@@ -356,6 +383,7 @@
 
   .menu {
     align-items: center;
+    width: 100%;
   }
 
   .menu a {
@@ -388,8 +416,10 @@
   }
 
   .sidebar {
+    height: auto;
     min-height: auto;
     position: relative;
+    top: auto;
     border-right: 0;
     border-bottom: 1px solid var(--border);
     flex-direction: row;
@@ -397,6 +427,7 @@
     align-items: center;
     padding: 14px;
     gap: 12px;
+    overflow: visible;
   }
 
   .brand-icon {
@@ -408,18 +439,27 @@
   .menu {
     flex-direction: row;
     overflow-x: auto;
+    overflow-y: hidden;
     gap: 8px;
     max-width: 100%;
+    flex: 0 1 auto;
+  }
+
+  .menu a {
+    flex-shrink: 0;
   }
 
   .logout {
     flex-shrink: 0;
+    margin-top: 0;
   }
 
   .topbar {
     flex-direction: column;
     align-items: flex-start;
     padding: 20px;
+    position: relative;
+    top: auto;
   }
 
   .admin-card {
@@ -452,4 +492,34 @@
   .content {
     padding: 16px;
   }
+}
+
+/* =========================
+   FIJAR SIDEBAR Y TOPBAR
+========================= */
+
+.layout {
+  height: 100vh;
+  overflow: hidden;
+}
+
+.sidebar {
+  height: 100vh;
+  position: sticky;
+  top: 0;
+  z-index: 60;
+}
+
+.main {
+  height: 100vh;
+  overflow-y: auto;
+  overflow-x: hidden;
+}
+
+.topbar {
+  position: sticky;
+  top: 0;
+  z-index: 50;
+  background: rgba(255, 255, 255, 0.92);
+  backdrop-filter: blur(10px);
 }

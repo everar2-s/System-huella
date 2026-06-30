@@ -501,3 +501,265 @@ tbody tr:hover {
     width: 100%;
   }
 }
+/* PAGINACIÓN */
+
+.pagination {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 8px;
+  margin-top: 18px;
+  flex-wrap: wrap;
+  width: 100%;
+}
+
+.page-btn,
+.page-number {
+  height: 38px;
+  min-width: 38px;
+  padding: 0 13px;
+  border-radius: 12px;
+  border: 1px solid #d8dee8;
+  background: #ffffff;
+  color: #374151;
+  font-size: 0.88rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.page-btn:hover:not(:disabled),
+.page-number:hover:not(.active) {
+  background: #f8fafc;
+  border-color: #1f7a5a;
+  color: #1f7a5a;
+}
+
+.page-number.active {
+  background: #1f7a5a;
+  color: #ffffff;
+  border-color: #1f7a5a;
+  box-shadow: 0 8px 18px rgba(31, 122, 90, 0.18);
+}
+
+.page-btn:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+.pagination-info {
+  margin-top: 10px;
+  text-align: center;
+  color: #6b7280;
+  font-size: 0.9rem;
+  font-weight: 600;
+  width: 100%;
+}
+
+@media (max-width: 720px) {
+  .pagination {
+    justify-content: center;
+  }
+
+  .page-btn,
+  .page-number {
+    flex: 0 0 auto;
+  }
+
+  .pagination-info {
+    text-align: center;
+  }
+}
+/* =========================
+   CORRECCIÓN FINAL FILTROS
+========================= */
+
+.filters-card {
+  width: fit-content;
+  max-width: 100%;
+  padding: 18px 22px;
+  border-radius: 20px;
+}
+
+.filters-card .section-head {
+  margin-bottom: 14px;
+}
+
+.filters-card .section-head h3 {
+  font-size: 1.05rem;
+}
+
+.filters-grid {
+  display: grid;
+  grid-template-columns: 120px 250px 230px max-content;
+  gap: 14px;
+  align-items: end;
+}
+
+.filter-actions {
+  display: flex;
+  justify-content: flex-end;
+  align-items: end;
+  gap: 14px;
+}
+
+.filter-actions .btn {
+  white-space: nowrap;
+}
+
+.field {
+  gap: 7px;
+}
+
+.field label {
+  font-size: 0.76rem;
+}
+
+.field input,
+.field select {
+  height: 44px;
+  border-radius: 13px;
+  font-size: 0.92rem;
+  padding: 0 13px;
+}
+
+.btn {
+  height: 44px;
+  padding: 0 16px;
+  border-radius: 13px;
+  font-size: 0.92rem;
+}
+
+/* =========================
+   PAGINADO CENTRADO
+========================= */
+
+.pagination {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 8px;
+  margin-top: 18px;
+  flex-wrap: wrap;
+  width: 100%;
+}
+
+.pagination-info {
+  margin-top: 10px;
+  text-align: center;
+  width: 100%;
+  color: #6b7280;
+  font-size: 0.9rem;
+  font-weight: 600;
+}
+
+/* =========================
+   RESPONSIVE
+========================= */
+
+@media (max-width: 920px) {
+  .filters-card {
+    width: 100%;
+  }
+
+  .filters-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .filter-actions {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 12px;
+  }
+
+  .filter-actions .btn {
+    width: 100%;
+  }
+}
+/* =========================
+   FILTRO MÁS COMPACTO FINAL
+========================= */
+
+.filters-card {
+  width: fit-content;
+  max-width: 100%;
+  padding: 16px 20px;
+  border-radius: 20px;
+}
+
+.filters-grid {
+  display: grid;
+  grid-template-columns: 110px 230px 230px max-content;
+  gap: 12px;
+  align-items: end;
+}
+
+.filters-card .section-head {
+  margin-bottom: 12px;
+}
+
+.filters-card .section-head h3 {
+  font-size: 1rem;
+}
+
+.field {
+  gap: 6px;
+}
+
+.field label {
+  font-size: 0.72rem;
+}
+
+.field input,
+.field select {
+  height: 42px;
+  border-radius: 12px;
+  font-size: 0.9rem;
+  padding: 0 12px;
+}
+
+.filter-actions {
+  display: flex;
+  justify-content: flex-end;
+  align-items: end;
+  gap: 12px;
+}
+
+.filter-actions .btn {
+  height: 42px;
+  padding: 0 15px;
+  border-radius: 12px;
+  font-size: 0.9rem;
+  white-space: nowrap;
+}
+
+/* Si quieres que el filtro quede centrado dentro de la página */
+.filters-card {
+  margin-left: 0;
+}
+
+/* RESPONSIVE */
+@media (max-width: 920px) {
+  .filters-card {
+    width: 100%;
+  }
+
+  .filters-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .filter-actions {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .filter-actions .btn {
+    width: 100%;
+  }
+}
+/* ALARGAR SOLO LA TARJETA DE FILTROS */
+
+.filters-card {
+  width: 100%;
+  max-width: 100%;
+}
